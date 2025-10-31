@@ -29,5 +29,5 @@ app.use(errorHandler);
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   connectDb();
-  console.log(`Listening on port ${port}`);
+  console.log(`Server is Running at http://localhost:${port}`);
 });

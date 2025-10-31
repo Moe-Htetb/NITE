@@ -5,6 +5,8 @@ interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  confirmPassword?: string;
+  role: "user" | "admin";
   mathPassword(enterPassword: string): boolean;
 }
 
@@ -23,6 +25,15 @@ const userSchema = new Schema<IUser>(
       required: true,
       type: String,
     },
+    confirmPassword: {
+      required: false,
+      type: String,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
   },
   {
     timestamps: true,
@@ -35,6 +46,9 @@ userSchema.pre("save", async function (next) {
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+
+  this.confirmPassword = undefined;
+  next();
 });
 
 userSchema.methods.mathPassword = async function (enterPassword: string) {
