@@ -7,7 +7,7 @@ interface IUser extends Document {
   password: string;
   confirmPassword?: string;
   role: "user" | "admin";
-  mathPassword(enterPassword: string): boolean;
+  matchPassword(enterPassword: string): boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -51,7 +51,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.methods.mathPassword = async function (enterPassword: string) {
+userSchema.methods.matchPassword = async function (enterPassword: string) {
   return await bcrypt.compare(enterPassword, this.password);
 };
 

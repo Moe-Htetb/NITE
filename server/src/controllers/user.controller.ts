@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { User } from "../models/user.model";
+import { generateToken } from "../utils/generateToken";
 
 //@route POST | /api/v1/register
 // @desc Register new user
@@ -33,8 +34,27 @@ export const registerController = asyncHandler(
     }
   }
 );
+
+//@route POST | /api/v1/login
+// @desc user login
+// @access Public
 export const loginController = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {}
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+    if (!email) throw new Error("Email is required");
+    if (!password) throw new Error("Password is required");
+
+    const user = await User.findOne({ email });
+    if (user && user.matchPassword(password)) {
+      generateToken(res, user._id);
+      res.status(200).json({
+        message: "Login successful",
+        user: { id: user._id, name: user.name, email: user.email },
+      });
+    } else {
+      throw new Error("Invalid  Credentials");
+    }
+  }
 );
 export const logoutController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {}
