@@ -57,5 +57,12 @@ export const loginController = asyncHandler(
   }
 );
 export const logoutController = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {}
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+    });
+    res.status(200).json({ message: "Logout successful" });
+  }
 );
