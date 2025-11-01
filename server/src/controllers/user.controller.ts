@@ -40,22 +40,46 @@ export const registerController = asyncHandler(
 // @access Public
 export const loginController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
-    if (!email) throw new Error("Email is required");
-    if (!password) throw new Error("Password is required");
+    try {
+      const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (user && user.matchPassword(password)) {
+      if (!email || !password) {
+        res.status(400);
+        throw new Error("Email and password are required");
+      }
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        res.status(401);
+        throw new Error("Invalid credentials");
+      }
+
+      const isPasswordValid = await user.matchPassword(password);
+
+      if (!isPasswordValid) {
+        res.status(401);
+        throw new Error("Invalid credentials");
+      }
+
       generateToken(res, user._id);
       res.status(200).json({
         message: "Login successful",
-        user: { id: user._id, name: user.name, email: user.email },
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
       });
-    } else {
-      throw new Error("Invalid  Credentials");
+    } catch (error) {
+      next(error);
     }
   }
 );
+
+//@route POST | /api/v1/logout
+// @desc user logout remove cookie
+// @access Public
 export const logoutController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     res.clearCookie("token", {

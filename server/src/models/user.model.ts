@@ -7,7 +7,7 @@ interface IUser extends Document {
   password: string;
   confirmPassword?: string;
   role: "user" | "admin";
-  matchPassword(enterPassword: string): boolean;
+  matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
