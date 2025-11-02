@@ -6,10 +6,13 @@ export const validateRequest = (
   res: Response,
   next: NextFunction
 ) => {
-  const result = validationResult(req);
-  if (!result.isEmpty()) {
-    res.status(400).json({ errors: result.array() });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors: errors.array(),
+    });
   }
-
-  next();
+  next(); // Only call next if no errors
 };

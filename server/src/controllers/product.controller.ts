@@ -1,9 +1,12 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 
 import { asyncHandler } from "../utils/asyncHandler";
 import { Product } from "../models/product.model";
 import { AuthRequest } from "../middlewares/authMiddleware";
 
+//@route POST | /api/v1/product/create
+// @desc create product
+// @access admin
 export const createProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const {
@@ -20,23 +23,6 @@ export const createProductController = asyncHandler(
       rating_count,
     } = req.body;
 
-    if (!name) throw new Error("Name is required");
-
-    if (!description) throw new Error("Description is required");
-
-    if (!price) throw new Error("Price is required");
-
-    if (!instock_count) throw new Error("Instock_count is required");
-
-    if (!category) throw new Error("Category is required");
-
-    if (!sizes) throw new Error("Sizes is required");
-
-    if (!colors) throw new Error("Colors is required");
-
-    if (!images) throw new Error("Images is required");
-
-    if (!rating_count) throw new Error("Rating_count is required");
     // const existingProduct = await Product.findOne({
     //   name,
     //   category,
@@ -70,12 +56,20 @@ export const createProductController = asyncHandler(
     }
   }
 );
+
+//@route POST | /api/v1/products
+// @desc get all product
+// @access public
 export const getAllProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const products = await Product.find({});
     res.status(200).json({ products });
   }
 );
+
+//@route POST | /api/v1/product/:id
+// @desc get single product
+// @access public
 export const getSingleProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;
@@ -84,6 +78,9 @@ export const getSingleProductController = asyncHandler(
   }
 );
 
+//@route POST | /api/v1/product/update/:id
+// @desc create product
+// @access admin
 export const updateProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const {
@@ -131,6 +128,9 @@ export const updateProductController = asyncHandler(
   }
 );
 
+//@route POST | /api/v1/product/delete/:id
+// @desc create product
+// @access admin
 export const deleteProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { id } = req.params;

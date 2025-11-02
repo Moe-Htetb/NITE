@@ -7,7 +7,11 @@ import {
   updateProductController,
 } from "../controllers/product.controller";
 import { isAdmin, protect } from "../middlewares/authMiddleware";
-import { createProductValidator } from "../validators/productValidator";
+import {
+  createProductValidator,
+  deleteProductValidator,
+  updateProductValidator,
+} from "../validators/productValidator";
 import { validateRequest } from "../middlewares/validateRequest";
 
 const productRouter = Router();
@@ -28,12 +32,16 @@ productRouter.put(
   "/product/update/:id",
   protect,
   isAdmin,
+  updateProductValidator,
+  validateRequest,
   updateProductController
 );
 productRouter.delete(
   "/product/delete/:id",
   protect,
   isAdmin,
+  deleteProductValidator,
+  validateRequest,
   deleteProductController
 );
 export default productRouter;
