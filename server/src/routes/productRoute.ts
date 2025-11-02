@@ -7,6 +7,8 @@ import {
   updateProductController,
 } from "../controllers/product.controller";
 import { isAdmin, protect } from "../middlewares/authMiddleware";
+import { createProductValidator } from "../validators/productValidator";
+import { validateRequest } from "../middlewares/validateRequest";
 
 const productRouter = Router();
 
@@ -14,6 +16,8 @@ productRouter.post(
   "/product/create",
   protect,
   isAdmin,
+  createProductValidator,
+  validateRequest,
   createProductController
 );
 
