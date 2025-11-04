@@ -54,3 +54,7 @@ export const loginValidation = [
 
   body("password").notEmpty().withMessage("Password is required"),
 ];
+
+export const imageUploadValidation = [
+  body("imageUrl").notEmpty().withMessage("Image is required"),
+];

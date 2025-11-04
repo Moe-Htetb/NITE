@@ -1,11 +1,15 @@
 import bcrypt from "bcryptjs";
 import mongoose, { Schema } from "mongoose";
 
-interface IUser extends Document {
+interface IUser {
   name: string;
   email: string;
   password: string;
   confirmPassword?: string;
+  profile?: {
+    url: string;
+    public_alt: string;
+  };
   role: "user" | "admin";
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
@@ -28,6 +32,14 @@ const userSchema = new Schema<IUser>(
     confirmPassword: {
       required: false,
       type: String,
+    },
+    profile: {
+      type: [
+        {
+          url: String,
+          public_alt: String,
+        },
+      ],
     },
     role: {
       type: String,

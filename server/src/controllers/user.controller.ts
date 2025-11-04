@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { User } from "../models/user.model";
 import { generateToken } from "../utils/generateToken";
+import { AuthRequest } from "../middlewares/authMiddleware";
+import { deleteImage, uploadSingeImage } from "../cloud/cloudinary";
 
 //@route POST | /api/v1/register
 // @desc Register new user
@@ -74,5 +76,39 @@ export const logoutController = asyncHandler(
       sameSite: "none",
     });
     res.status(200).json({ message: "Logout successful" });
+  }
+);
+
+//@route POST | /api/v1/profileUpload
+// @desc login user upload image
+// @access Private
+
+export const profileUploadController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const imageUrl = req.body.imageUrl;
+    const userInfo = await User.findById(user?._id);
+
+    if (userInfo?.profile?.url)
+      await deleteImage(userInfo?.profile?.public_alt);
+
+    const response = await uploadSingeImage(imageUrl, "NITE/user/profile");
+    await User.findByIdAndUpdate(userInfo?._id, {
+      profile: {
+        url: response.url,
+        public_alt: response.public_alt,
+      },
+    });
+
+    // console.log(response);
+    res.status(200).json({ message: "Avatar Uploaded.", url: response.url });
+  }
+);
+
+export const getUserProfileController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const userInfo = await User.findById(user?._id).select("-password");
+    res.status(200).json({ user: userInfo });
   }
 );
