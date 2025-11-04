@@ -66,3 +66,7 @@ export const updateEmailValidation = [
     .isEmail()
     .withMessage("Enter a valid Email"),
 ];
+
+export const updateNameValidation = [
+  body("name").notEmpty().withMessage("Name is required"),
+];

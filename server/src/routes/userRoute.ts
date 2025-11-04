@@ -6,12 +6,14 @@ import {
   profileUploadController,
   registerController,
   updateEmailController,
+  updateNameController,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
   loginValidation,
   registerValidation,
   updateEmailValidation,
+  updateNameValidation,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
@@ -43,6 +45,13 @@ userRouter.post(
   validateRequest,
   protect,
   updateEmailController
+);
+userRouter.post(
+  "/updateName",
+  updateNameValidation,
+  validateRequest,
+  protect,
+  updateNameController
 );
 
 export default userRouter;

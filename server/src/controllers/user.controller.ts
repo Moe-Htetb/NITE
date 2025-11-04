@@ -133,3 +133,16 @@ export const updateEmailController = asyncHandler(
     res.status(200).json({ message: "Email Updated Successfully" });
   }
 );
+
+//@route POST | /api/v1/updateName
+// @desc login user update name
+// @access Private
+export const updateNameController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { user } = req;
+    const { name } = req.body;
+
+    await User.findByIdAndUpdate(user?._id, { name });
+    res.status(200).json({ message: "Name Updated Successfully" });
+  }
+);
