@@ -58,3 +58,11 @@ export const loginValidation = [
 export const imageUploadValidation = [
   body("imageUrl").notEmpty().withMessage("Image is required"),
 ];
+
+export const updateEmailValidation = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Enter a valid Email"),
+];

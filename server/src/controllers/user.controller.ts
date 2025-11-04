@@ -105,10 +105,31 @@ export const profileUploadController = asyncHandler(
   }
 );
 
+//@route POST | /api/v1/profile
+// @desc login user getting profile
+// @access Private
+
 export const getUserProfileController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const user = req.user;
     const userInfo = await User.findById(user?._id).select("-password");
     res.status(200).json({ user: userInfo });
+  }
+);
+
+//@route POST | /api/v1/updateEmail
+// @desc login user update email
+// @access Private
+export const updateEmailController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { user } = req;
+    const { email } = req.body;
+
+    const existUserEmail = await User.findOne({ email });
+    if (existUserEmail) {
+      throw new Error("This email is already owned by other");
+    }
+    await User.findByIdAndUpdate(user?._id, { email });
+    res.status(200).json({ message: "Email Updated Successfully" });
   }
 );

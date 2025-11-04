@@ -5,11 +5,13 @@ import {
   logoutController,
   profileUploadController,
   registerController,
+  updateEmailController,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
   loginValidation,
   registerValidation,
+  updateEmailValidation,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
@@ -35,5 +37,12 @@ userRouter.post(
   profileUploadController
 );
 userRouter.get("/profile", protect, getUserProfileController);
+userRouter.post(
+  "/updateEmail",
+  updateEmailValidation,
+  validateRequest,
+  protect,
+  updateEmailController
+);
 
 export default userRouter;
