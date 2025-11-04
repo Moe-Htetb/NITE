@@ -4,13 +4,13 @@ import { User } from "../models/user.model";
 import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { deleteImage, uploadSingeImage } from "../cloud/cloudinary";
-
+import bcrypt from "bcryptjs";
 //@route POST | /api/v1/register
 // @desc Register new user
 // @access Public
 export const registerController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -144,5 +144,29 @@ export const updateNameController = asyncHandler(
 
     await User.findByIdAndUpdate(user?._id, { name });
     res.status(200).json({ message: "Name Updated Successfully" });
+  }
+);
+
+//@route POST | /api/v1/updateName
+// @desc login user update name
+// @access Private
+export const updatePasswordController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { user } = req;
+    const { old_password, new_password } = req.body;
+
+    const existUser = await User.findById(user?._id).select("+password");
+
+    if (!existUser) throw new Error("Not Authorized");
+
+    const isPasswordValid = await bcrypt.compare(
+      old_password,
+      existUser.password
+    );
+    if (!isPasswordValid) throw new Error("Password Invalid");
+    existUser.password = new_password;
+    await existUser.save();
+
+    res.status(200).json({ message: "Password updated successfully." });
   }
 );

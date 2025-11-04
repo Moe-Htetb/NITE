@@ -7,6 +7,7 @@ import {
   registerController,
   updateEmailController,
   updateNameController,
+  updatePasswordController,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
@@ -14,6 +15,7 @@ import {
   registerValidation,
   updateEmailValidation,
   updateNameValidation,
+  updatePasswordValidation,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
@@ -52,6 +54,13 @@ userRouter.post(
   validateRequest,
   protect,
   updateNameController
+);
+userRouter.post(
+  "/updatePassword",
+  updatePasswordValidation,
+  validateRequest,
+  protect,
+  updatePasswordController
 );
 
 export default userRouter;

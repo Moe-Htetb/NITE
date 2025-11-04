@@ -70,3 +70,38 @@ export const updateEmailValidation = [
 export const updateNameValidation = [
   body("name").notEmpty().withMessage("Name is required"),
 ];
+
+export const updatePasswordValidation = [
+  body("old_password").notEmpty().withMessage("old password is required"),
+
+  body("new_password")
+    .isLength({ min: 6 })
+    .withMessage("new_password must be at least 6 characters long")
+    .custom((value) => {
+      //   console.log("Password validation:", value); // Debug log
+
+      if (!/(?=.*[A-Z])/.test(value)) {
+        throw new Error("Password must contain at least one uppercase letter");
+      }
+
+      if (!/(?=.*\d)/.test(value)) {
+        throw new Error("Password must contain at least one number");
+      }
+
+      if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(value)) {
+        throw new Error("Password must contain at least one special character");
+      }
+
+      return true;
+    }),
+
+  body("confirm_password")
+    .notEmpty()
+    .withMessage("confirm_password is required")
+    .custom((value, { req }) => {
+      if (value !== req.body.new_password) {
+        throw new Error("Passwords do not match");
+      }
+      return true;
+    }),
+];
