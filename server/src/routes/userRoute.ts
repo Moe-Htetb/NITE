@@ -5,17 +5,23 @@ import {
   logoutController,
   profileUploadController,
   registerController,
+  forgotPasswordController,
   updateEmailController,
   updateNameController,
   updatePasswordController,
+  verifyOtpController,
+  resetPasswordController,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
   loginValidation,
+  forgotPasswordValidator,
   registerValidation,
   updateEmailValidation,
   updateNameValidation,
   updatePasswordValidation,
+  verifyOtpValidator,
+  resetPasswordValidator,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
@@ -62,5 +68,25 @@ userRouter.post(
   protect,
   updatePasswordController
 );
-
+userRouter.post(
+  "/forgot-password",
+  forgotPasswordValidator,
+  validateRequest,
+  protect,
+  forgotPasswordController
+);
+userRouter.post(
+  "/verify-otp",
+  verifyOtpValidator,
+  validateRequest,
+  protect,
+  verifyOtpController
+);
+userRouter.post(
+  "/reset-password",
+  resetPasswordValidator,
+  validateRequest,
+  protect,
+  resetPasswordController
+);
 export default userRouter;
