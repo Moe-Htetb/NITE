@@ -194,8 +194,9 @@ export const forgotPasswordController = asyncHandler(
 
     const token = generateOneTimeToken();
     const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password`;
-    // const otp = generateOTP();// for production
+    // const otp = generateOTP(); // for production
     const otp = "123456";
+    const hashOtp = await bcrypt.hash(otp, 10); // Hash the OTP
 
     const body = otpEmailTemplate(otp, resetPasswordUrl);
 
@@ -203,10 +204,10 @@ export const forgotPasswordController = asyncHandler(
 
     let data;
     if (!existEmail) {
-      // Create new OTP record
+      // Create new OTP record with HASHED OTP
       const otpData = {
         email,
-        otp,
+        otp: hashOtp, // Store hashed OTP
         token,
         count: 1,
         errorCount: 0,
@@ -221,31 +222,20 @@ export const forgotPasswordController = asyncHandler(
       const isSameDate = lastOtpRequest === currentDate;
 
       checkOtpLimit(isSameDate, existEmail?.errorCount, existEmail?.count);
-      if (!isSameDate) {
-        const otpData = {
-          otp,
-          token,
-          count: 1,
-          errorCount: 0,
-        };
-        data = await Otp.findByIdAndUpdate(existEmail._id, otpData, {
-          new: true,
-        });
-      } else {
-        // Same day, increment count
-        const otpData = {
-          otp,
-          token,
-          count: existEmail.count + 1,
-          errorCount: 0, // Reset error count on new OTP request
-        };
-        data = await Otp.findByIdAndUpdate(existEmail._id, otpData, {
-          new: true,
-        });
-      }
+
+      // Always use HASHED OTP
+      const otpData = {
+        otp: hashOtp, // Store hashed OTP here too
+        token,
+        count: isSameDate ? existEmail.count + 1 : 1,
+        errorCount: 0, // Reset error count on new OTP request
+      };
+      data = await Otp.findByIdAndUpdate(existEmail._id, otpData, {
+        new: true,
+      });
     }
 
-    // Send email with OTP
+    // Send email with OTP (uncomment when ready)
     // try {
     //   await sendEmail({
     //     reciver_mail: email,
@@ -315,9 +305,13 @@ export const verifyOtpController = asyncHandler(
     const isSameToken = otpRow.token === token;
     if (!isSameToken) {
       // Update error count to maximum
-      await Otp.findByIdAndUpdate(otpRow._id, {
-        errorCount: 5,
-      });
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: 5,
+        },
+        { new: true }
+      );
       res.status(400).json({
         error: "Invalid token",
         message: "Token verification failed",
@@ -344,9 +338,13 @@ export const verifyOtpController = asyncHandler(
     if (!isMatchOtp) {
       // Increment error count
       const newErrorCount = isSameDate ? otpRow.errorCount + 1 : 1;
-      await Otp.findByIdAndUpdate(otpRow._id, {
-        errorCount: newErrorCount,
-      });
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: newErrorCount,
+        },
+        { new: true }
+      );
 
       res.status(400).json({
         error: "Invalid OTP",
@@ -356,6 +354,11 @@ export const verifyOtpController = asyncHandler(
     }
 
     const newToken = generateOneTimeToken();
+    const otpData = {
+      token: newToken,
+      errorCount: 0, // Reset error count but keep the OTP and count
+    };
+    await Otp.findByIdAndUpdate(otpRow._id, otpData, { new: true });
     res
       .status(200)
       .json({ message: "OTP verified successfully", token: newToken });
@@ -365,5 +368,78 @@ export const verifyOtpController = asyncHandler(
 // desc verify Otp
 // @access Private
 export const resetPasswordController = asyncHandler(
-  async (req: AuthRequest, res: Response, next: NextFunction) => {}
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, new_password, token } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      res.status(400).json({
+        error: "User not found",
+        message: "Invalid email address",
+      });
+      return;
+    }
+
+    // Find OTP record
+    const otpRow = await Otp.findOne({ email });
+    if (!otpRow) {
+      res.status(400).json({
+        error: "Invalid request",
+        message: "Please start the password reset process again",
+      });
+      return;
+    }
+
+    // OTP error count is over limit
+    if (otpRow.errorCount >= 5) {
+      res.status(400).json({
+        error: "This request may be an attack",
+        message: "Security violation detected",
+      });
+      return;
+    }
+
+    // Token is wrong
+    if (otpRow.token !== token) {
+      // Update error count to maximum
+      await Otp.findByIdAndUpdate(otpRow._id, {
+        errorCount: 5,
+      });
+
+      res.status(400).json({
+        error: "Invalid token",
+        message: "Token verification failed",
+      });
+      return;
+    }
+
+    // Request is expired (10 minutes)
+    const isExpired =
+      moment().diff(
+        moment(otpRow.updatedAt as unknown as string | number | Date),
+        "minutes"
+      ) > 10;
+    if (isExpired) {
+      res.status(403).json({
+        error: "Your request is expired",
+        message: "Please try again",
+      });
+      return;
+    }
+
+    // Update user password (make sure to hash it!)
+    // const hashedPassword = await bcrypt.hash(new_password, 10);
+    user.password = new_password;
+    await user.save();
+
+    // Clear OTP record after successful password reset
+    // await Otp.findByIdAndDelete(otpRow._id);
+
+    res.status(200).json({
+      message: "Password reset successfully",
+      email: email,
+    });
+  }
 );

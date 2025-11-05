@@ -124,6 +124,11 @@ export const verifyOtpValidator = [
   body("token").notEmpty().withMessage("token is required"),
 ];
 export const resetPasswordValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Valid email is required"),
   body("token").notEmpty().withMessage("token is required"),
   body("new_password")
     .isLength({ min: 6 })

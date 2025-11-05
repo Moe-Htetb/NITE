@@ -26,17 +26,17 @@ const otpSchema = new Schema<IOtp>(
   }
 );
 
-otpSchema.pre("save", async function (next) {
-  if (!this.isModified("otp")) {
-    next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.otp = await bcrypt.hash(this.otp, salt);
+// otpSchema.pre("save", async function (next) {
+//   if (!this.isModified("otp")) {
+//     next();
+//   }
+//   const salt = await bcrypt.genSalt(10);
+//   this.otp = await bcrypt.hash(this.otp, salt);
 
-  next();
-});
+//   next();
+// });
 
-otpSchema.methods.matchOtp = async function (enterOtp: string) {
-  return await bcrypt.compare(enterOtp, this.otp);
-};
+// otpSchema.methods.matchOtp = async function (enterOtp: string) {
+//   return await bcrypt.compare(enterOtp, this.otp);
+// };
 export const Otp = mongoose.model("Otp", otpSchema);
