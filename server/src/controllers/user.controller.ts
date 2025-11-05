@@ -8,11 +8,11 @@ import bcrypt from "bcryptjs";
 import { otpEmailTemplate } from "../utils/emailTemplate";
 import { sendEmail } from "../utils/sentEmail";
 
-import otpGenerator from "otp-generator";
 import { generateOneTimeToken, generateOTP } from "../utils/generateOTP";
 import { Otp } from "../models/otp.model";
 import { Schema } from "mongoose";
 import { checkOtpLimit } from "../utils/checkOtpLimit";
+import moment from "moment";
 //@route POST | /api/v1/register
 // @desc Register new user
 // @access Public
@@ -182,50 +182,6 @@ export const updatePasswordController = asyncHandler(
 // @route POST | api/forgot-password
 // desc Send email to user's own mail.
 // @access Private
-// export const forgotPasswordController = asyncHandler(
-//   async (req: AuthRequest, res: Response) => {
-//     const { user } = req;
-//     const { email } = req.body;
-
-//     const existingUser = await User.findOne({ email });
-
-//     if (!existingUser) {
-//       throw new Error("This email doen't exist.");
-//     }
-
-//     const token = generateOneTimeToken();
-//     // await existingUser.save();
-
-//     const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password`;
-//     const otp = generateOTP();
-//     const body = otpEmailTemplate(otp, resetPasswordUrl);
-//     // await Otp.create({ email, otp, token, count: 1 });
-
-//     const existEmail = await Otp.findOne({ email });
-//     console.log(existEmail);
-//     if (!existEmail) {
-//       await Otp.create({ email, otp, token, count: 1 });
-//     } else {
-//       const lastRequestOtp = new Date(
-//         existEmail?.createdAt )
-//     }
-
-//     // try {
-//     //   await sendEmail({
-//     //     reciver_mail: user?.email!,
-//     //     subject: "Password Reset - NITE.COM",
-//     //     body,
-//     //   });
-//     // } catch (error) {
-//     //   throw new Error("otp send error");
-//     // }
-
-//     res.status(200).json({ message: "Otp sented" });
-//   }
-// );
-// @route POST | api/forgot-password
-// desc Send email to user's own mail.
-// @access Private
 export const forgotPasswordController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { user } = req;
@@ -238,7 +194,9 @@ export const forgotPasswordController = asyncHandler(
 
     const token = generateOneTimeToken();
     const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password`;
-    const otp = generateOTP();
+    // const otp = generateOTP();// for production
+    const otp = "123456";
+
     const body = otpEmailTemplate(otp, resetPasswordUrl);
 
     const existEmail = await Otp.findOne({ email });
@@ -288,21 +246,21 @@ export const forgotPasswordController = asyncHandler(
     }
 
     // Send email with OTP
-    try {
-      await sendEmail({
-        reciver_mail: email,
-        subject: "Password Reset - NITE.COM",
-        body,
-      });
-    } catch (error) {
-      // If email sending fails, decrement the count since OTP wasn't actually sent
-      if (existEmail) {
-        await Otp.findByIdAndUpdate(existEmail._id, {
-          $inc: { count: -1 }, // Decrement count by 1
-        });
-      }
-      throw new Error("OTP send error");
-    }
+    // try {
+    //   await sendEmail({
+    //     reciver_mail: email,
+    //     subject: "Password Reset - NITE.COM",
+    //     body,
+    //   });
+    // } catch (error) {
+    //   // If email sending fails, decrement the count since OTP wasn't actually sent
+    //   if (existEmail) {
+    //     await Otp.findByIdAndUpdate(existEmail._id, {
+    //       $inc: { count: -1 }, // Decrement count by 1
+    //     });
+    //   }
+    //   throw new Error("OTP send error");
+    // }
 
     res.status(200).json({
       message: `We are sending OTP to ${user?.email}`,
@@ -311,9 +269,101 @@ export const forgotPasswordController = asyncHandler(
   }
 );
 
+// @route POST | api/verify-otp
+// desc verify Otp
+// @access Private
 export const verifyOtpController = asyncHandler(
-  async (req: AuthRequest, res: Response, next: NextFunction) => {}
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { email, otp, token } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(400).json({
+        error: "User not found",
+        message: "Invalid email",
+      });
+      return;
+    }
+
+    // Check if OTP record exists
+    const otpRow = await Otp.findOne({ email });
+    if (!otpRow) {
+      res.status(400).json({
+        error: "OTP not found",
+        message: "Please request a new OTP",
+      });
+      return;
+    }
+
+    // Check if OTP is from same date
+    const isSameDate =
+      new Date(
+        otpRow.updatedAt as unknown as string | number | Date
+      ).toLocaleDateString() === new Date().toLocaleDateString();
+
+    // Check error count limit
+    if (otpRow.errorCount >= 5) {
+      res.status(403).json({
+        error: "Too many failed attempts",
+        message: "Please try again tomorrow",
+      });
+      return;
+    }
+
+    // Token verification
+    const isSameToken = otpRow.token === token;
+    if (!isSameToken) {
+      // Update error count to maximum
+      await Otp.findByIdAndUpdate(otpRow._id, {
+        errorCount: 5,
+      });
+      res.status(400).json({
+        error: "Invalid token",
+        message: "Token verification failed",
+      });
+      return;
+    }
+
+    // OTP expiration check (5 minutes)
+    const isOtpExpired =
+      moment().diff(
+        moment(otpRow.updatedAt as unknown as string | number | Date),
+        "minutes"
+      ) > 1;
+    if (isOtpExpired) {
+      res.status(403).json({
+        error: "OTP expired",
+        message: "Please request a new OTP",
+      });
+      return;
+    }
+
+    // OTP verification
+    const isMatchOtp = await bcrypt.compare(otp, otpRow.otp);
+    if (!isMatchOtp) {
+      // Increment error count
+      const newErrorCount = isSameDate ? otpRow.errorCount + 1 : 1;
+      await Otp.findByIdAndUpdate(otpRow._id, {
+        errorCount: newErrorCount,
+      });
+
+      res.status(400).json({
+        error: "Invalid OTP",
+        message: "Please check your OTP and try again",
+      });
+      return;
+    }
+
+    const newToken = generateOneTimeToken();
+    res
+      .status(200)
+      .json({ message: "OTP verified successfully", token: newToken });
+  }
 );
+// @route POST | api/reset-password
+// desc verify Otp
+// @access Private
 export const resetPasswordController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {}
 );

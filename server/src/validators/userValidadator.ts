@@ -115,6 +115,11 @@ export const forgotPasswordValidator = [
 ];
 
 export const verifyOtpValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Valid email is required"),
   body("otp").notEmpty().withMessage("Otp is required"),
   body("token").notEmpty().withMessage("token is required"),
 ];
