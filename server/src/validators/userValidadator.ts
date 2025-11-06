@@ -46,6 +46,44 @@ export const registerValidation = [
     }),
 ];
 
+export const verifyRegisterOtpValidation = [
+  body("name")
+    .notEmpty()
+    .withMessage("Name is required")
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Name must be between 2 and 50 characters")
+    .trim()
+    .escape(),
+
+  body("email")
+    .isEmail()
+    .withMessage("Please provide a valid email address")
+    .normalizeEmail(),
+
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long")
+    .custom((value) => {
+      //   console.log("Password validation:", value); // Debug log
+
+      if (!/(?=.*[A-Z])/.test(value)) {
+        throw new Error("Password must contain at least one uppercase letter");
+      }
+
+      if (!/(?=.*\d)/.test(value)) {
+        throw new Error("Password must contain at least one number");
+      }
+
+      if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(value)) {
+        throw new Error("Password must contain at least one special character");
+      }
+
+      return true;
+    }),
+  body("otp").notEmpty().withMessage("Otp is required"),
+  body("token").notEmpty().withMessage("token is required"),
+];
+
 export const loginValidation = [
   body("email")
     .isEmail()

@@ -13,4 +13,5 @@ export const generateToken = (res: Response, userId: Types.ObjectId) => {
     sameSite: "none",
     maxAge: 7 * 60 * 60 * 24 * 1000,
   });
+  return token;
 };

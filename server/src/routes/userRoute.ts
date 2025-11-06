@@ -11,6 +11,7 @@ import {
   updatePasswordController,
   verifyOtpController,
   resetPasswordController,
+  verifyRegisterOtpController,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
@@ -22,6 +23,7 @@ import {
   updatePasswordValidation,
   verifyOtpValidator,
   resetPasswordValidator,
+  verifyRegisterOtpValidation,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
@@ -34,6 +36,12 @@ userRouter.post(
   registerValidation,
   validateRequest,
   registerController
+);
+userRouter.post(
+  "/verify-register-otp",
+  verifyRegisterOtpValidation,
+  validateRequest,
+  verifyRegisterOtpController
 );
 userRouter.post("/login", loginValidation, validateRequest, loginController);
 userRouter.post("/logout", logoutController);

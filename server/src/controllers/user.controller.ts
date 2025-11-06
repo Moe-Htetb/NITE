@@ -25,14 +25,181 @@ export const registerController = asyncHandler(
       throw new Error("User already exists");
     }
 
-    const user = await User.create({ name, email, password });
+    const token = generateOneTimeToken();
+    // const otp = generateOTP(); // for production
+    const otp = "123456";
+    const hashOtp = await bcrypt.hash(otp, 10);
 
-    if (user) {
-      res.status(201).json({
-        message: "Account Created Successfully",
-        user: { id: user._id, name: user.name, email: user.email },
+    // Send verification email for registration
+    const verificationUrl = `${process.env.CLIENT_URL}/verify-email`;
+    const emailBody = otpEmailTemplate(otp, verificationUrl);
+
+    const existEmail = await Otp.findOne({ email });
+
+    let data;
+    if (!existEmail) {
+      const otpData = {
+        email,
+        otp: hashOtp,
+        token,
+        count: 1,
+        errorCount: 0,
+      };
+      data = await Otp.create(otpData);
+    } else {
+      const lastOtpRequest = new Date(
+        existEmail.updatedAt as unknown as string | number | Date
+      ).toLocaleDateString();
+      const currentDate = new Date().toLocaleDateString();
+      const isSameDate = lastOtpRequest === currentDate;
+
+      checkOtpLimit(isSameDate, existEmail?.errorCount, existEmail?.count);
+
+      const otpData = {
+        otp: hashOtp,
+        token,
+        count: isSameDate ? existEmail.count + 1 : 1,
+        errorCount: 0,
+      };
+      data = await Otp.findByIdAndUpdate(existEmail._id, otpData, {
+        new: true,
       });
     }
+
+    // Send email with OTP
+    try {
+      // await sendEmail({
+      //   reciver_mail: email,
+      //   subject: "Verify Your Email - NITE.COM",
+      //   body: emailBody,
+      // });
+
+      res.status(200).json({
+        message: `We are sending OTP to ${email}`,
+        token,
+        // Don't send user data for security
+      });
+    } catch (error) {
+      if (existEmail) {
+        await Otp.findByIdAndUpdate(existEmail._id, {
+          $inc: { count: -1 }, // Decrement count by 1
+        });
+      }
+      throw new Error("Failed to send verification email. Please try again.");
+    }
+  }
+);
+// @route POST | api/verify-register-otp
+// desc Verify OTP for registration
+// @access Public
+export const verifyRegisterOtpController = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, otp, token, name, password } = req.body;
+
+    // Check if OTP record exists
+    const otpRow = await Otp.findOne({ email });
+    if (!otpRow) {
+      res.status(400).json({
+        error: "OTP not found",
+        message: "Please request a new OTP",
+      });
+      return;
+    }
+
+    // Check if user already exists (prevent duplicate registration)
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).json({
+        error: "User already exists",
+        message: "This email is already registered",
+      });
+      return;
+    }
+
+    // Check if OTP is from same date
+    const isSameDate =
+      new Date(
+        otpRow.updatedAt as unknown as string | number | Date
+      ).toLocaleDateString() === new Date().toLocaleDateString();
+
+    // Check error count limit
+    if (otpRow.errorCount >= 5) {
+      res.status(403).json({
+        error: "Too many failed attempts",
+        message: "Please try again tomorrow",
+      });
+      return;
+    }
+
+    // Token verification
+    const isSameToken = otpRow.token === token;
+    if (!isSameToken) {
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: 5,
+        },
+        { new: true }
+      );
+      res.status(400).json({
+        error: "Invalid token",
+        message: "Token verification failed",
+      });
+      return;
+    }
+
+    // OTP expiration check (10 minutes for registration)
+    const isOtpExpired =
+      moment().diff(
+        moment(otpRow.updatedAt as unknown as string | number | Date),
+        "minutes"
+      ) > 1;
+    if (isOtpExpired) {
+      res.status(403).json({
+        error: "OTP expired",
+        message: "Please request a new OTP",
+      });
+      return;
+    }
+
+    // OTP verification
+    const isMatchOtp = await bcrypt.compare(otp, otpRow.otp);
+    if (!isMatchOtp) {
+      const newErrorCount = isSameDate ? otpRow.errorCount + 1 : 1;
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: newErrorCount,
+        },
+        { new: true }
+      );
+
+      res.status(400).json({
+        error: "Invalid OTP",
+        message: "Please check your OTP and try again",
+      });
+      return;
+    }
+
+    // OTP verified successfully - Create user account
+    const user = await User.create({
+      name,
+      email,
+      password,
+    });
+
+    // Generate auth token
+    const loginToken = generateToken(res, user._id);
+
+    res.status(201).json({
+      message: "Account created successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      token: loginToken,
+    });
   }
 );
 
@@ -58,7 +225,7 @@ export const loginController = asyncHandler(
         throw new Error("Invalid credentials");
       }
 
-      generateToken(res, user._id);
+      const LoginToken = generateToken(res, user._id);
       res.status(200).json({
         message: "Login successful",
         user: {
@@ -66,6 +233,7 @@ export const loginController = asyncHandler(
           name: user.name,
           email: user.email,
         },
+        token: LoginToken,
       });
     } catch (error) {
       next(error);
@@ -184,7 +352,6 @@ export const updatePasswordController = asyncHandler(
 // @access Private
 export const forgotPasswordController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const { user } = req;
     const { email } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -253,7 +420,7 @@ export const forgotPasswordController = asyncHandler(
     // }
 
     res.status(200).json({
-      message: `We are sending OTP to ${user?.email}`,
+      message: `We are sending OTP to ${email}`,
       token,
     });
   }
