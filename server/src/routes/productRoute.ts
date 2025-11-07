@@ -3,6 +3,8 @@ import {
   createProductController,
   deleteProductController,
   getAllProductController,
+  getFeaturedProductController,
+  getNewProductController,
   getSingleProductController,
   updateProductController,
 } from "../controllers/product.controller";
@@ -44,4 +46,7 @@ productRouter.delete(
   validateRequest,
   deleteProductController
 );
+productRouter.get("/product/feature", getFeaturedProductController);
+productRouter.get("/product/new", getNewProductController);
+
 export default productRouter;

@@ -146,3 +146,18 @@ export const deleteProductController = asyncHandler(
     res.status(404).json({ message: "Product destory!" });
   }
 );
+
+export const getFeaturedProductController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const product = await Product.find({ is_feature: true }).sort({
+      createdAt: -1,
+    });
+    res.status(200).json({ product });
+  }
+);
+export const getNewProductController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const product = await Product.find({ is_new_arrival: true });
+    res.status(200).json({ product });
+  }
+);
