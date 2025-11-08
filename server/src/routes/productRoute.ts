@@ -5,6 +5,7 @@ import {
   getAllProductController,
   getFeaturedProductController,
   getNewProductController,
+  getProductsWithFilter,
   getSingleProductController,
   updateProductController,
 } from "../controllers/product.controller";
@@ -27,7 +28,9 @@ productRouter.post(
   createProductController
 );
 
-productRouter.get("/products", getAllProductController);
+// productRouter.get("/products", getAllProductController);
+productRouter.get("/products", getProductsWithFilter);
+
 productRouter.get("/product/:id", getSingleProductController);
 
 productRouter.put(

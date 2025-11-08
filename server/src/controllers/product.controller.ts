@@ -147,6 +147,9 @@ export const deleteProductController = asyncHandler(
   }
 );
 
+// @route GET | api/products/feature
+// @desc Get all feature products.
+// @access Public
 export const getFeaturedProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const product = await Product.find({ is_feature: true }).sort({
@@ -155,9 +158,68 @@ export const getFeaturedProductController = asyncHandler(
     res.status(200).json({ product });
   }
 );
+
+// @route GET | api/products/new
+// @desc Get all new products.
+// @access Public
 export const getNewProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const product = await Product.find({ is_new_arrival: true });
     res.status(200).json({ product });
+  }
+);
+// @route GET | api/products/keyword={name}
+// @desc Get all filter products.
+// @access Public
+export const getProductsWithFilter = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const {
+      keyword,
+      category,
+      minPrice,
+      maxPrice,
+      color,
+      size,
+      sortBy = "createdAt", // Default sort by latest
+      sortOption = "desc", // Default: newest first
+    } = req.query;
+
+    let query: any = {};
+    if (keyword) {
+      query.name = { $regex: keyword, $options: "i" };
+    }
+    if (category) query.category = category;
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+    if (color) {
+      query.colors = { $in: [color] };
+    }
+    if (size) {
+      query.sizes = { $in: [size] };
+    }
+
+    // Enhanced sorting logic for multiple fields
+    let sort: any = {};
+
+    if (sortBy === "latest" || sortBy === "createdAt") {
+      sort.createdAt = sortOption === "asc" ? 1 : -1; // Newest first by default
+    } else if (sortBy === "rating") {
+      sort.rating_count = sortOption === "desc" ? -1 : 1; // Highest rating first by default
+    } else if (sortBy === "price") {
+      sort.price = sortOption === "asc" ? 1 : -1; // Lowest price first by default
+    } else if (sortBy === "name") {
+      sort.name = sortOption === "asc" ? 1 : -1; // A-Z by default
+    } else {
+      // Default sorting by latest
+      sort.createdAt = -1;
+    }
+
+    // Your database query
+    const products = await Product.find(query).sort(sort);
+    console.log(query, sort);
+    res.status(200).json({ products });
   }
 );
