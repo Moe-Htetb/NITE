@@ -180,46 +180,165 @@ export const getProductsWithFilter = asyncHandler(
       maxPrice,
       color,
       size,
-      sortBy = "createdAt", // Default sort by latest
-      sortOption = "desc", // Default: newest first
+      sort_by = "createdAt",
+      sort_direction = "desc",
+      page = 1,
+      limit = 5,
     } = req.query;
 
     let query: any = {};
     if (keyword) {
       query.name = { $regex: keyword, $options: "i" };
     }
-    if (category) query.category = category;
+    if (category) query.category = { $regex: category, $options: "i" };
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
     if (color) {
-      query.colors = { $in: [color] };
+      const colorArray = Array.isArray(color) ? color : [color];
+      query.colors = {
+        $in: colorArray.map((c) => new RegExp(c as string, "i")),
+      };
     }
+
     if (size) {
-      query.sizes = { $in: [size] };
+      const sizeArray = Array.isArray(size) ? size : [size];
+      query.sizes = {
+        $in: sizeArray.map((s) => (s as string).toUpperCase()),
+      };
     }
 
-    // Enhanced sorting logic for multiple fields
+    // Sorting logic
     let sort: any = {};
-
-    if (sortBy === "latest" || sortBy === "createdAt") {
-      sort.createdAt = sortOption === "asc" ? 1 : -1; // Newest first by default
-    } else if (sortBy === "rating") {
-      sort.rating_count = sortOption === "desc" ? -1 : 1; // Highest rating first by default
-    } else if (sortBy === "price") {
-      sort.price = sortOption === "asc" ? 1 : -1; // Lowest price first by default
-    } else if (sortBy === "name") {
-      sort.name = sortOption === "asc" ? 1 : -1; // A-Z by default
+    if (sort_by === "latest" || sort_by === "createdAt") {
+      sort.createdAt = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "rating") {
+      sort.rating_count = sort_direction === "desc" ? -1 : 1;
+    } else if (sort_by === "price") {
+      sort.price = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "name") {
+      sort.name = sort_direction === "asc" ? 1 : -1;
     } else {
-      // Default sorting by latest
       sort.createdAt = -1;
     }
 
-    // Your database query
-    const products = await Product.find(query).sort(sort);
-    console.log(query, sort);
-    res.status(200).json({ products });
+    // Pagination calculation
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Execute queries
+    const products = await Product.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limitNum);
+
+    // Build base URL
+    const baseUrl = `${req.protocol}://${req.get("host")}${req.baseUrl}${
+      req.path
+    }`;
+
+    // Build query parameters without page
+    const buildQueryParams = (pageNumber: number = pageNum) => {
+      const params = new URLSearchParams();
+
+      if (keyword) params.append("keyword", keyword as string);
+      if (category) params.append("category", category as string);
+      if (minPrice) params.append("minPrice", minPrice as string);
+      if (maxPrice) params.append("maxPrice", maxPrice as string);
+      if (color) {
+        if (Array.isArray(color)) {
+          color.forEach((c) => params.append("color", c as string));
+        } else {
+          params.append("color", color as string);
+        }
+      }
+      if (size) {
+        if (Array.isArray(size)) {
+          size.forEach((s) => params.append("size", s as string));
+        } else {
+          params.append("size", size as string);
+        }
+      }
+      if (sort_by) params.append("sort_by", sort_by as string);
+      if (sort_direction)
+        params.append("sort_direction", sort_direction as string);
+
+      params.append("limit", limitNum.toString());
+      params.append("page", pageNumber.toString());
+
+      return params.toString();
+    };
+
+    // Build links
+    const firstPageUrl = `${baseUrl}?${buildQueryParams(1)}`;
+    const lastPageUrl = `${baseUrl}?${buildQueryParams(totalPages)}`;
+    const prevPageUrl =
+      pageNum > 1 ? `${baseUrl}?${buildQueryParams(pageNum - 1)}` : null;
+    const nextPageUrl =
+      pageNum < totalPages
+        ? `${baseUrl}?${buildQueryParams(pageNum + 1)}`
+        : null;
+
+    // // Build meta links for pagination
+    // const metaLinks = [];
+
+    // // Previous link
+    // metaLinks.push({
+    //   url: prevPageUrl,
+    //   label: "&laquo; Previous",
+    //   active: false
+    // });
+
+    // // Page number links
+    // for (let i = 1; i <= totalPages; i++) {
+    //   metaLinks.push({
+    //     url: `${baseUrl}?${buildQueryParams(i)}`,
+    //     label: i.toString(),
+    //     active: i === pageNum
+    //   });
+    // }
+
+    // // Next link
+    // metaLinks.push({
+    //   url: nextPageUrl,
+    //   label: "Next &raquo;",
+    //   active: false
+    // });
+
+    // Calculate from and to
+    const from = totalProducts > 0 ? (pageNum - 1) * limitNum + 1 : null;
+    const to =
+      totalProducts > 0 ? Math.min(pageNum * limitNum, totalProducts) : null;
+
+    // Send response
+    res.json({
+      data: products,
+      links: {
+        first: firstPageUrl,
+        last: lastPageUrl,
+        prev: prevPageUrl,
+        next: nextPageUrl,
+        totalProducts,
+        totalPages,
+        from,
+        to,
+      },
+      // meta: {
+      //   current_page: pageNum,
+      //   from: from,
+      //   last_page: totalPages,
+      //   links: metaLinks,
+      //   path: baseUrl,
+      //   per_page: limitNum,
+      //   to: to,
+      //   total: totalProducts
+      // }
+    });
   }
 );

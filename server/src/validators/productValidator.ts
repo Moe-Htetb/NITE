@@ -103,7 +103,7 @@ export const createProductValidator = [
   body("rating_count")
     .notEmpty()
     .withMessage("Rating count is required")
-    .isFloat({ min: 0, max: 5 })
+    .isFloat({ min: 0 })
     .withMessage("Rating count must be a number between 0 and 5"),
 ];
 
