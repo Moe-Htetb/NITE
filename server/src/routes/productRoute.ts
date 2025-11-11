@@ -4,6 +4,7 @@ import {
   deleteProductController,
   getAllProductController,
   getFeaturedProductController,
+  getMetaProductController,
   getNewProductController,
   getProductsWithFilter,
   getSingleProductController,
@@ -19,6 +20,7 @@ import { validateRequest } from "../middlewares/validateRequest";
 
 const productRouter = Router();
 
+// Create product
 productRouter.post(
   "/product/create",
   protect,
@@ -28,11 +30,18 @@ productRouter.post(
   createProductController
 );
 
-// productRouter.get("/products", getAllProductController);
+// Get all products (with filters)
 productRouter.get("/products", getProductsWithFilter);
 
+// Static routes - MUST come before dynamic routes
+productRouter.get("/product/feature", getFeaturedProductController);
+productRouter.get("/product/new", getNewProductController);
+productRouter.get("/product/meta", getMetaProductController); // This now comes before :id
+
+// Dynamic routes - come after all static routes
 productRouter.get("/product/:id", getSingleProductController);
 
+// Update and delete
 productRouter.put(
   "/product/update/:id",
   protect,
@@ -49,7 +58,5 @@ productRouter.delete(
   validateRequest,
   deleteProductController
 );
-productRouter.get("/product/feature", getFeaturedProductController);
-productRouter.get("/product/new", getNewProductController);
 
 export default productRouter;

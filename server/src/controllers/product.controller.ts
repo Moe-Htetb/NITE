@@ -342,3 +342,30 @@ export const getProductsWithFilter = asyncHandler(
     });
   }
 );
+
+// @route GET | api/products/meta
+// @desc Get all unique colors and size and minPrice and maxPrice
+// @access Public
+export const getMetaProductController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const color = await Product.distinct("colors");
+    const size = await Product.distinct("sizes");
+
+    const priceRange = await Product.aggregate([
+      {
+        $group: {
+          _id: null,
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      colors: color,
+      sizes: size,
+      minPrice: priceRange[0]?.minPrice || 0,
+      maxPrice: priceRange[0]?.maxPrice || 0,
+    });
+  }
+);
