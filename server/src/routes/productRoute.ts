@@ -17,6 +17,7 @@ import {
   updateProductValidator,
 } from "../validators/productValidator";
 import { validateRequest } from "../middlewares/validateRequest";
+import { upload } from "../utils/upload";
 
 const productRouter = Router();
 
@@ -25,8 +26,9 @@ productRouter.post(
   "/product/create",
   protect,
   isAdmin,
-  createProductValidator,
-  validateRequest,
+  // createProductValidator,
+  // validateRequest,
+  upload.array("images"),
   createProductController
 );
 

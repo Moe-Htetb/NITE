@@ -3,34 +3,49 @@ import { NextFunction, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Product } from "../models/product.model";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import { uploadSingeImage } from "../cloud/cloudinary";
 
 //@route POST | /api/v1/product/create
 // @desc create product
 // @access admin
 export const createProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const {
-      name,
-      description,
-      price,
-      instock_count,
+    const { name, description, category } = req.body;
+
+    const sizes = Array.isArray(req.body.sizes)
+      ? req.body.sizes
+      : [req.body.sizes];
+    const colors = Array.isArray(req.body.colors)
+      ? req.body.colors
+      : [req.body.colors];
+
+    const price = Number(req.body.price);
+    const instock_count = Number(req.body.instock_count);
+    const rating_count = Number(req.body.rating_count);
+
+    const is_feature = req.body.is_feature === "true";
+    const is_new_arrival = req.body.is_new_arrival === "true";
+
+    const existingProduct = await Product.findOne({
       category,
-      sizes,
-      colors,
-      images,
-      is_new_arrival,
-      is_feature,
-      rating_count,
-    } = req.body;
+    });
 
-    // const existingProduct = await Product.findOne({
-    //   name,
-    //   category,
-    // });
-
-    // if (existingProduct) {
-    //   throw new Error("Product with this name already exists in this category");
-    // }
+    if (existingProduct) {
+      throw new Error("Category with this name already exists ");
+    }
+    const images = req.files as Express.Multer.File[];
+    const uploadedImages = await Promise.all(
+      images.map(async (image) => {
+        const uploadImg = await uploadSingeImage(
+          `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
+          "NITE/products"
+        );
+        return {
+          url: uploadImg.url,
+          public_alt: uploadImg.public_alt,
+        };
+      })
+    );
 
     const product = await Product.create({
       name,
@@ -40,7 +55,7 @@ export const createProductController = asyncHandler(
       category,
       sizes,
       colors,
-      images,
+      images: uploadedImages,
       is_new_arrival,
       is_feature,
       rating_count,
