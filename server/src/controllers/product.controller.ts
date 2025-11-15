@@ -3,7 +3,7 @@ import { NextFunction, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Product } from "../models/product.model";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import { uploadSingeImage } from "../cloud/cloudinary";
+import { deleteImage, uploadSingeImage } from "../cloud/cloudinary";
 
 //@route POST | /api/v1/product/create
 // @desc create product
@@ -97,28 +97,82 @@ export const getSingleProductController = asyncHandler(
 // @desc create product
 // @access admin
 export const updateProductController = asyncHandler(
-  async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const {
-      name,
-      description,
-      price,
-      instock_count,
-      category,
-      sizes,
-      colors,
-      images,
-      is_new_arrival,
-      is_feature,
-      rating_count,
-    } = req.body;
+  async (req: AuthRequest, res: Response) => {
+    const { name, description, category, existingImages } = req.body;
+
+    const sizes = Array.isArray(req.body.sizes)
+      ? req.body.sizes
+      : [req.body.sizes];
+    const colors = Array.isArray(req.body.colors)
+      ? req.body.colors
+      : [req.body.colors];
+
+    const price = Number(req.body.price);
+    const instock_count = Number(req.body.instock_count);
+    const rating_count = Number(req.body.rating_count);
+
+    const is_feature = req.body.is_feature === "true";
+    const is_new_arrival = req.body.is_new_arrival === "true";
+
+    // parse existing images
+    const keepExistingImages = existingImages ? JSON.parse(existingImages) : [];
+
+    // new images
+    const newImages = req.files as Express.Multer.File[];
 
     const { id } = req.params;
+
     const existingProduct = await Product.findById(id);
 
     if (!existingProduct) {
       res.status(404);
       throw new Error("No product found with is id.");
     }
+
+    // existing product image from db -> [{url:image_url,public_alt:abcd},{url:image_url,public_alt:efgh}]
+    // existing image -> [{url:image_url,public_alt:abcd}]
+    // [{url:image_url,public_alt:abcd}] existing images
+    // [{url:image_url,public_alt:efgh}] image to delete
+
+    // find images to delete from cloud
+    const imagesToDelete = existingProduct.images.filter((existingImg) => {
+      return !keepExistingImages.some(
+        (keepImg: any) => keepImg.public_alt === existingImg.public_alt
+      );
+    });
+
+    if (imagesToDelete.length > 0) {
+      await Promise.all(
+        imagesToDelete.map(async (img) => {
+          if (img.public_alt) {
+            try {
+              await deleteImage(img.public_alt);
+            } catch (err) {
+              console.log(`Failed to delete image ${img.public_alt}`, err);
+            }
+          }
+        })
+      );
+    }
+
+    // upload new images
+    let uploadedNewImages: any[] = [];
+    if (newImages && newImages.length > 0) {
+      uploadedNewImages = await Promise.all(
+        newImages.map(async (image) => {
+          const uploadImg = await uploadSingeImage(
+            `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
+            "fash.com/products"
+          );
+          return {
+            url: uploadImg.url,
+            public_alt: uploadImg.public_alt,
+          };
+        })
+      );
+    }
+
+    const finalImages = [...keepExistingImages, ...uploadedNewImages];
 
     existingProduct.name = name || existingProduct.name;
     existingProduct.description = description || existingProduct.description;
@@ -128,7 +182,7 @@ export const updateProductController = asyncHandler(
     existingProduct.category = category || existingProduct.category;
     existingProduct.sizes = sizes || existingProduct.sizes;
     existingProduct.colors = colors || existingProduct.colors;
-    existingProduct.images = images || existingProduct.images;
+    existingProduct.images = finalImages;
     existingProduct.is_new_arrival =
       is_new_arrival || existingProduct.is_new_arrival;
     existingProduct.is_feature = is_feature || existingProduct.is_feature;
@@ -136,10 +190,7 @@ export const updateProductController = asyncHandler(
 
     const updatedProduct = await existingProduct.save();
 
-    res.status(200).json({
-      message: "Product updated successfully",
-      product: updatedProduct,
-    });
+    res.status(200).json(updatedProduct);
   }
 );
 

@@ -48,8 +48,10 @@ productRouter.put(
   "/product/update/:id",
   protect,
   isAdmin,
-  updateProductValidator,
-  validateRequest,
+  // updateProductValidator,
+  // validateRequest,
+  upload.array("images"),
+
   updateProductController
 );
 productRouter.delete(
