@@ -26,3 +26,5 @@ export const deleteImage = async (public_alt: string) => {
   const response = await cloudinary.uploader.destroy(public_alt);
   return response?.result === "ok";
 };
+
+//nothing just for commit
