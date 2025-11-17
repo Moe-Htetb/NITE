@@ -416,6 +416,7 @@ export const getMetaProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const color = await Product.distinct("colors");
     const size = await Product.distinct("sizes");
+    const category = await Product.distinct("category");
 
     const priceRange = await Product.aggregate([
       {
@@ -430,6 +431,7 @@ export const getMetaProductController = asyncHandler(
     res.status(200).json({
       colors: color,
       sizes: size,
+      category: category,
       minPrice: priceRange[0]?.minPrice || 0,
       maxPrice: priceRange[0]?.maxPrice || 0,
     });

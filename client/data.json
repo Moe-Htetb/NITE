@@ -1,0 +1,426 @@
+[
+  {
+    "name": "Midnight Vibe Black Tee",
+    "description": "A sleek oversized black t-shirt made for comfort and street style. Perfect for casual wear or layering.",
+    "category": "t-shirt",
+    "colors": ["Black", "Charcoal", "Grey"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": 70,
+    "images": [
+      {
+        "url": "https://www.ryderwear.com/cdn/shop/products/advance-oversized-t-shirt-black-clothing-ryderwear-285430_1080x.jpg",
+        "public_alt": "Black T-Shirt Front"
+      },
+      {
+        "url": "http://placehold.co/300x300/FF5733/FFFFFF/png",
+        "public_alt": "Black T-Shirt Alt 1"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 60,
+    "rating_count": 45,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Fresh Breeze White Tee",
+    "description": "A lightweight white t-shirt that brings a fresh and clean look. Designed for everyday wear.",
+    "category": "t-shirt",
+    "colors": ["White", "Cream", "Beige"],
+    "sizes": ["M", "L", "XL"],
+    "price": 78,
+    "images": [
+      {
+        "url": "https://nobero.com/cdn/shop/files/white_855177b5-5621-4a4b-a0d1-9060b89a6a69.jpg",
+        "public_alt": "White T-Shirt Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 40,
+    "rating_count": 32,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Urban Classic Grey Tee",
+    "description": "Comfortable grey t-shirt with modern urban design, perfect for daily casual wear.",
+    "category": "t-shirt",
+    "colors": ["Grey", "Dark Grey", "Charcoal"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": 65,
+    "images": [
+      {
+        "url": "https://example.com/grey-tshirt.jpg",
+        "public_alt": "Grey T-Shirt Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 35,
+    "rating_count": 28,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Premium Cotton Blue Tee",
+    "description": "Soft blue cotton t-shirt offering premium comfort and perfect fit for all-day wear.",
+    "category": "t-shirt",
+    "colors": ["Blue", "Navy", "Sky Blue"],
+    "sizes": ["S", "M", "L"],
+    "price": 85,
+    "images": [
+      {
+        "url": "https://example.com/blue-tshirt.jpg",
+        "public_alt": "Blue T-Shirt Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 25,
+    "rating_count": 19,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Evergreen Comfort Hoodie",
+    "description": "A soft green hoodie perfect for both style and warmth. A go-to for cooler days.",
+    "category": "hoodie",
+    "colors": ["Green", "Olive", "Dark Green"],
+    "sizes": ["S", "M", "L"],
+    "price": 95,
+    "images": [
+      {
+        "url": "https://nobero.com/cdn/shop/files/222C021C-8EFF-4A86-A782-A25876663738.jpg",
+        "public_alt": "Green Hoodie Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 40,
+    "rating_count": 67,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Urban Edge Black Hoodie",
+    "description": "A dark black hoodie with a bold edge, blending comfort and modern streetwear.",
+    "category": "hoodie",
+    "colors": ["Black", "Navy", "Dark Grey"],
+    "sizes": ["M", "L", "XL"],
+    "price": 110,
+    "images": [
+      {
+        "url": "https://cdn.shopify.com/s/files/1/2987/0758/products/Lens_Hoodie-Hoodie-LDM201023-460201-Dark_Navy_White-2_07adae82-f321-4c65-a1bd-8038bdf3e8e4.jpg",
+        "public_alt": "Black Hoodie Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 30,
+    "rating_count": 89,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Winter Comfort Fleece Hoodie",
+    "description": "Warm fleece-lined hoodie designed for maximum comfort during cold weather.",
+    "category": "hoodie",
+    "colors": ["Red", "Maroon", "Burgundy"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": 125,
+    "images": [
+      {
+        "url": "https://example.com/red-hoodie.jpg",
+        "public_alt": "Red Hoodie Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 20,
+    "rating_count": 42,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Sport Performance Hoodie",
+    "description": "Lightweight performance hoodie with moisture-wicking technology for active lifestyle.",
+    "category": "hoodie",
+    "colors": ["Blue", "Navy", "Royal Blue"],
+    "sizes": ["M", "L", "XL"],
+    "price": 140,
+    "images": [
+      {
+        "url": "https://example.com/sport-hoodie.jpg",
+        "public_alt": "Sport Hoodie Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 15,
+    "rating_count": 76,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Cloudstep White Adidas Shoes",
+    "description": "Classic Adidas sneakers in white. Lightweight, durable, and stylish for any occasion.",
+    "category": "shoe",
+    "colors": ["White", "Grey", "Silver"],
+    "sizes": ["40", "41", "42", "43", "44"],
+    "price": 120,
+    "images": [
+      {
+        "url": "https://rukminim2.flixcart.com/image/704/844/xif0q/shoe/q/s/n/-original-imah25hq9y8t3ukf.jpeg",
+        "public_alt": "White Adidas Shoe Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 10,
+    "rating_count": 94,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Nike Air Max Running Shoes",
+    "description": "High-performance running shoes with Air Max technology for superior cushioning.",
+    "category": "shoe",
+    "colors": ["Black", "White", "Grey"],
+    "sizes": ["39", "40", "41", "42", "43"],
+    "price": 180,
+    "images": [
+      {
+        "url": "https://example.com/nike-airmax.jpg",
+        "public_alt": "Nike Air Max Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 8,
+    "rating_count": 88,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Puma Classic Sneakers",
+    "description": "Vintage-style sneakers combining retro design with modern comfort technology.",
+    "category": "shoe",
+    "colors": ["Black", "White", "Red"],
+    "sizes": ["38", "39", "40", "41", "42"],
+    "price": 95,
+    "images": [
+      {
+        "url": "https://example.com/puma-sneakers.jpg",
+        "public_alt": "Puma Sneakers Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 12,
+    "rating_count": 65,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Skechers Memory Foam Walkers",
+    "description": "Comfort walking shoes with memory foam insoles for all-day comfort.",
+    "category": "shoe",
+    "colors": ["Grey", "Black", "Blue"],
+    "sizes": ["40", "41", "42", "43", "44"],
+    "price": 85,
+    "images": [
+      {
+        "url": "https://example.com/skechers-walkers.jpg",
+        "public_alt": "Skechers Walkers Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 18,
+    "rating_count": 72,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Denim Drift Jeans",
+    "description": "Classic blue denim jeans that combine durability with style. Perfect for casual and semi-formal outfits.",
+    "category": "jeans",
+    "colors": ["Blue", "Light Blue", "Dark Blue"],
+    "sizes": ["30", "32", "34", "36"],
+    "price": 75,
+    "images": [
+      {
+        "url": "https://images.napali.app/global/element-products/all/default/xlarge/eljdp00106_element,f_bnt0_frt1.jpg",
+        "public_alt": "Blue Jeans Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 20,
+    "rating_count": 51,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Slim Fit Black Jeans",
+    "description": "Modern slim-fit black jeans offering a sleek and contemporary look.",
+    "category": "jeans",
+    "colors": ["Black", "Dark Grey", "Charcoal"],
+    "sizes": ["28", "30", "32", "34"],
+    "price": 85,
+    "images": [
+      {
+        "url": "https://example.com/black-jeans.jpg",
+        "public_alt": "Black Jeans Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 15,
+    "rating_count": 47,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Vintage Ripped Jeans",
+    "description": "Distressed vintage-style jeans with ripped details for a rugged, fashionable look.",
+    "category": "jeans",
+    "colors": ["Light Blue", "Blue", "Faded Blue"],
+    "sizes": ["30", "32", "34", "36"],
+    "price": 90,
+    "images": [
+      {
+        "url": "https://example.com/ripped-jeans.jpg",
+        "public_alt": "Ripped Jeans Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 12,
+    "rating_count": 38,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "StreetFlex Black Shorts",
+    "description": "Stylish black shorts built for comfort and flexibility. Ideal for workouts or casual summer days.",
+    "category": "short",
+    "colors": ["Black", "Grey", "Dark Blue"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": 45,
+    "images": [
+      {
+        "url": "https://www.shopcoveusa.com/cdn/shop/files/BLACK_FRONT.png",
+        "public_alt": "Black Shorts Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 20,
+    "rating_count": 29,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Athletic Performance Shorts",
+    "description": "Lightweight athletic shorts with moisture-wicking fabric for sports and workouts.",
+    "category": "short",
+    "colors": ["Blue", "Navy", "Royal Blue"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": 35,
+    "images": [
+      {
+        "url": "https://example.com/athletic-shorts.jpg",
+        "public_alt": "Athletic Shorts Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 25,
+    "rating_count": 63,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Casual Cargo Shorts",
+    "description": "Functional cargo shorts with multiple pockets, perfect for outdoor activities.",
+    "category": "short",
+    "colors": ["Green", "Khaki", "Olive"],
+    "sizes": ["M", "L", "XL"],
+    "price": 55,
+    "images": [
+      {
+        "url": "https://example.com/cargo-shorts.jpg",
+        "public_alt": "Cargo Shorts Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 18,
+    "rating_count": 41,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Designer Denim Jacket",
+    "description": "Premium denim jacket with distressed finish and modern cut for stylish layering.",
+    "category": "jacket",
+    "colors": ["Blue", "Light Blue", "Dark Blue"],
+    "sizes": ["S", "M", "L", "XL"],
+    "price": 150,
+    "images": [
+      {
+        "url": "https://example.com/denim-jacket.jpg",
+        "public_alt": "Denim Jacket Front"
+      }
+    ],
+    "is_new_arrival": false,
+    "is_feature": true,
+    "instock_count": 10,
+    "rating_count": 82,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  },
+  {
+    "name": "Winter Parka Coat",
+    "description": "Heavy-duty winter parka with thermal insulation for extreme cold weather protection.",
+    "category": "jacket",
+    "colors": ["Black", "Navy", "Dark Green"],
+    "sizes": ["M", "L", "XL"],
+    "price": 220,
+    "images": [
+      {
+        "url": "https://example.com/winter-parka.jpg",
+        "public_alt": "Winter Parka Front"
+      }
+    ],
+    "is_new_arrival": true,
+    "is_feature": false,
+    "instock_count": 8,
+    "rating_count": 91,
+    "userId": "68add60b0013521e949e5f46",
+    "createdAt": "2024-06-19T07:00:00.000Z",
+    "updatedAt": "2024-06-19T07:00:00.000Z"
+  }
+]
