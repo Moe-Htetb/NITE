@@ -31,7 +31,7 @@ export const registerController = asyncHandler(
     const hashOtp = await bcrypt.hash(otp, 10);
 
     // Send verification email for registration
-    const verificationUrl = `${process.env.CLIENT_URL}/verify-email`;
+    const verificationUrl = `${process.env.CLIENT_URL}/verify-otp`;
     const emailBody = otpEmailTemplate(otp, verificationUrl);
 
     const existEmail = await Otp.findOne({ email });
@@ -197,6 +197,7 @@ export const verifyRegisterOtpController = asyncHandler(
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
       token: loginToken,
     });
@@ -232,6 +233,7 @@ export const loginController = asyncHandler(
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
         },
         token: LoginToken,
       });
