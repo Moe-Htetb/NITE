@@ -1,0 +1,3 @@
+type IAuth = {
+  userInfo: any;
+};

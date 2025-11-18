@@ -1,7 +1,7 @@
 // HeroSection.tsx
 const HeroSection = () => {
   return (
-    <div className="relative bg-gradient-to-br from-emerald-50 to-cyan-100 py-20 overflow-hidden">
+    <div className="relative bg-linear-to-br from-emerald-50 to-cyan-100 py-20 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-20 h-20 bg-emerald-300 rounded-full"></div>
@@ -23,7 +23,7 @@ const HeroSection = () => {
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Adventure Awaits with
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 block">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-600 to-cyan-600 block">
                 Premium Gear
               </span>
             </h1>
@@ -77,7 +77,7 @@ const HeroSection = () => {
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto lg:max-w-none">
               {/* Featured Product 1 */}
               <div className="bg-white rounded-2xl p-6 shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
+                <div className="w-16 h-16 bg-linear-to-br from-emerald-400 to-cyan-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
                   🎒
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-2">
@@ -93,7 +93,7 @@ const HeroSection = () => {
 
               {/* Featured Product 2 */}
               <div className="bg-white rounded-2xl p-6 shadow-xl transform -rotate-2 hover:rotate-0 transition-transform duration-300 mt-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
+                <div className="w-16 h-16 bg-linear-to-br from-cyan-400 to-blue-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
                   👟
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-2">
@@ -107,7 +107,7 @@ const HeroSection = () => {
 
               {/* Featured Product 3 */}
               <div className="bg-white rounded-2xl p-6 shadow-xl transform rotate-2 hover:rotate-0 transition-transform duration-300">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-emerald-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
+                <div className="w-16 h-16 bg-linear-to-br from-teal-400 to-emerald-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
                   ⛺
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-2">
@@ -121,7 +121,7 @@ const HeroSection = () => {
 
               {/* Featured Product 4 */}
               <div className="bg-white rounded-2xl p-6 shadow-xl transform -rotate-3 hover:rotate-0 transition-transform duration-300 mt-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
+                <div className="w-16 h-16 bg-linear-to-br from-blue-400 to-purple-400 rounded-2xl mb-4 flex items-center justify-center text-2xl">
                   🔦
                 </div>
                 <h3 className="font-semibold text-gray-800 mb-2">

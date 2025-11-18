@@ -1,16 +1,15 @@
-import React from "react";
 import VerifyOtpForm from "./VerifyOtpForm";
 
 const VerifyOtpSection = () => {
   return (
-    <section className="min-h-screen bg-gradient-to-br from-emerald-50 to-cyan-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen bg-linear-to-br from-emerald-50 to-cyan-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">W</span>
             </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="text-3xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
               WanderShop
             </span>
           </div>
@@ -30,7 +29,7 @@ const VerifyOtpSection = () => {
 
           <div className="mt-6 p-4 bg-red-50 rounded-xl border border-red-200">
             <div className="flex">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <svg
                   className="h-5 w-5 text-red-400"
                   viewBox="0 0 20 20"

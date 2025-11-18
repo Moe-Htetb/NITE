@@ -47,7 +47,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start space-x-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">W</span>
               </div>
               <span className="text-xl font-bold">WanderShop</span>

@@ -44,10 +44,10 @@ const Header = () => {
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-lg">W</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
               WanderShop
             </span>
           </div>
@@ -201,7 +201,7 @@ const Header = () => {
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+              <span className="absolute -top-1 -right-1 bg-linear-to-r from-emerald-500 to-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                 3
               </span>
             </button>
@@ -212,7 +212,7 @@ const Header = () => {
                 className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition duration-300"
                 onClick={() => setIsUserOpen(!isUserOpen)}
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">JS</span>
                 </div>
                 <svg
@@ -383,7 +383,7 @@ const Header = () => {
             {/* Mobile User Actions */}
             <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
               <div className="flex items-center space-x-4 px-4 py-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">JS</span>
                 </div>
                 <div>

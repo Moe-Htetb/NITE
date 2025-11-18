@@ -3,12 +3,12 @@ import ForgotPasswordForm from "./ForgotPasswordForm";
 
 const ForgotPasswordSection = () => {
   return (
-    <section className="min-h-screen bg-gradient-to-br from-white to-emerald-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen bg-linear-to-br from-white to-emerald-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-sm w-full space-y-6">
         {/* Header */}
         <div className="text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-lg">W</span>
             </div>
             <span className="text-2xl font-bold text-gray-900">WanderShop</span>
@@ -23,7 +23,7 @@ const ForgotPasswordSection = () => {
         {/* Help Text */}
         <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
           <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 mt-0.5">
+            <div className="shrink-0 mt-0.5">
               <svg
                 className="w-4 h-4 text-blue-500"
                 fill="currentColor"

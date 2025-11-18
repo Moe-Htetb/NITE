@@ -166,7 +166,7 @@ const ProductShowcase = () => {
               className="group bg-white rounded-2xl border border-gray-100 hover:border-emerald-200 transition-all duration-500 hover:shadow-2xl overflow-hidden"
             >
               {/* Product Image/Badge */}
-              <div className="relative p-6 bg-gradient-to-br from-gray-50 to-gray-100">
+              <div className="relative p-6 bg-linear-to-br from-gray-50 to-gray-100">
                 <div className="absolute top-4 left-4">
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-full ${getBadgeColor(
@@ -264,7 +264,7 @@ const ProductShowcase = () => {
         </div>
 
         {/* Features Banner */}
-        <div className="mt-16 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-2xl p-8 text-white">
+        <div className="mt-16 bg-linear-to-r from-emerald-500 to-cyan-500 rounded-2xl p-8 text-white">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
