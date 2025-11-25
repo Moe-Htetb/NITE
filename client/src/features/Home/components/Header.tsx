@@ -1,5 +1,6 @@
 // Header.tsx
 import { useState } from "react";
+import { Link } from "react-router";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,9 +48,12 @@ const Header = () => {
             <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-lg">W</span>
             </div>
-            <span className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+            <Link
+              to={"/"}
+              className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent"
+            >
               WanderShop
-            </span>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
