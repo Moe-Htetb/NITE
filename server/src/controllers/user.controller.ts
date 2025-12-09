@@ -98,6 +98,7 @@ export const verifyRegisterOtpController = asyncHandler(
 
     // Check if OTP record exists
     const otpRow = await Otp.findOne({ email });
+    // console.log(otpRow);
     if (!otpRow) {
       res.status(400).json({
         error: "OTP not found",
@@ -164,6 +165,7 @@ export const verifyRegisterOtpController = asyncHandler(
 
     // OTP verification
     const isMatchOtp = await bcrypt.compare(otp, otpRow.otp);
+    // console.log(isMatchOtp);
     if (!isMatchOtp) {
       const newErrorCount = isSameDate ? otpRow.errorCount + 1 : 1;
       await Otp.findByIdAndUpdate(
