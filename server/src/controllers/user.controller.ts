@@ -18,7 +18,7 @@ import moment from "moment";
 // @access Public
 export const registerController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { name, email, password } = req.body;
+    const { email } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -149,7 +149,7 @@ export const verifyRegisterOtpController = asyncHandler(
       return;
     }
 
-    // OTP expiration check (10 minutes for registration)
+    // OTP expiration check (1 minutes for registration)
     const isOtpExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),

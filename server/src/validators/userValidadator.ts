@@ -1,49 +1,10 @@
 import { body } from "express-validator";
 
 export const registerValidation = [
-  body("name")
-    .notEmpty()
-    .withMessage("Name is required")
-    .isLength({ min: 2, max: 50 })
-    .withMessage("Name must be between 2 and 50 characters")
-    .trim()
-    .escape(),
-
   body("email")
     .isEmail()
     .withMessage("Please provide a valid email address")
     .normalizeEmail(),
-
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long")
-    .custom((value) => {
-      //   console.log("Password validation:", value); // Debug log
-
-      if (!/(?=.*[A-Z])/.test(value)) {
-        throw new Error("Password must contain at least one uppercase letter");
-      }
-
-      if (!/(?=.*\d)/.test(value)) {
-        throw new Error("Password must contain at least one number");
-      }
-
-      if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(value)) {
-        throw new Error("Password must contain at least one special character");
-      }
-
-      return true;
-    }),
-
-  body("confirmPassword")
-    .notEmpty()
-    .withMessage("Confirm password is required")
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
 ];
 
 export const verifyRegisterOtpValidation = [
