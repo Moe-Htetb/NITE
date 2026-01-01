@@ -26,14 +26,10 @@ export const registerController = asyncHandler(
     }
 
     const token = generateOneTimeToken();
-    // const otp = generateOTP(); // for production
-    const otp = "123456";
+    const otp = generateOTP(); // Generate real 6-digit OTP
     const hashOtp = await bcrypt.hash(otp, 10);
 
-    // Send verification email for registration
-    const verificationUrl = `${process.env.CLIENT_URL}/verify-otp`;
-    const emailBody = otpEmailTemplate(otp, verificationUrl);
-
+    // Store OTP in database
     const existEmail = await Otp.findOne({ email });
 
     let data;
@@ -66,26 +62,65 @@ export const registerController = asyncHandler(
       });
     }
 
+    // Prepare email
+    const verificationUrl = `${process.env.CLIENT_LOCAL_URL}/verify-otp`;
+    const emailBody = otpEmailTemplate(otp, verificationUrl);
+
     // Send email with OTP
     try {
-      // await sendEmail({
-      //   reciver_mail: email,
-      //   subject: "Verify Your Email - NITE.COM",
-      //   body: emailBody,
-      // });
+      console.log(`📧 Sending OTP email to: ${email}`);
 
-      res.status(200).json({
-        message: `We are sending OTP to ${email}`,
-        token,
-        // Don't send user data for security
+      await sendEmail({
+        reciver_mail: email,
+        subject: "Verify Your Email - NITE.COM",
+        body: emailBody,
       });
-    } catch (error) {
-      if (existEmail) {
+
+      console.log(`✅ Email sent successfully to: ${email}`);
+
+      // For development, still show OTP in console for testing
+      if (process.env.NODE_ENV === "development") {
+        console.log(`🔄 DEV MODE: OTP for ${email}: ${otp}`);
+      }
+
+      // Send response
+      res.status(200).json({
+        success: true,
+        message: `OTP sent successfully to ${email}`,
+        token,
+        // Include OTP in development mode for testing convenience
+        ...(process.env.NODE_ENV === "development" && {
+          devOtp: otp,
+          devNote:
+            "OTP shown only in development mode. Check your email inbox for the actual OTP.",
+        }),
+      });
+    } catch (error: any) {
+      console.error("❌ Email sending failed:", error.message);
+
+      // Clean up OTP record if email failed
+      if (data) {
+        await Otp.findByIdAndDelete(data._id);
+      } else if (existEmail) {
         await Otp.findByIdAndUpdate(existEmail._id, {
-          $inc: { count: -1 }, // Decrement count by 1
+          $inc: { count: -1 },
         });
       }
-      throw new Error("Failed to send verification email. Please try again.");
+
+      // For development, still return OTP even if email fails
+      if (process.env.NODE_ENV === "development") {
+        console.log(`⚠️ Email failed, but returning OTP for testing: ${otp}`);
+        res.status(200).json({
+          success: false,
+          message: `Email sending failed, but here's your OTP for testing: ${otp}`,
+          token,
+          otp: otp,
+          error: error.message,
+          note: "Email service failed, but you can use this OTP for testing",
+        });
+      } else {
+        throw new Error("Failed to send verification email. Please try again.");
+      }
     }
   }
 );
