@@ -11,11 +11,11 @@ const VerifyOtpPage = lazy(
 
 const authRoute = [
   {
-    path: "/sign-in",
+    path: "/login",
     element: <SignInPage />,
   },
   {
-    path: "/sign-up",
+    path: "/register",
     element: <SignUpPage />,
   },
   {

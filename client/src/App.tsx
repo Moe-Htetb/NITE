@@ -1,5 +1,7 @@
-const App = () => {
-  return <div className="text-red-500">App</div>;
-};
+import { ComponentExample } from "@/components/component-example";
+
+export function App() {
+return <ComponentExample />;
+}
 
 export default App;

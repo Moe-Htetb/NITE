@@ -1,3 +1,0 @@
-type IAuth = {
-  userInfo: any;
-};
