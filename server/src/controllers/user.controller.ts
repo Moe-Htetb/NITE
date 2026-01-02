@@ -3,14 +3,14 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { User } from "../models/user.model";
 import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import { deleteImage, uploadSingeImage } from "../cloud/cloudinary";
+import { deleteImage, uploadSingleImage } from "../cloud/cloudinary";
 import bcrypt from "bcryptjs";
 import { otpEmailTemplate } from "../utils/emailTemplate";
 import { sendEmail } from "../utils/sentEmail";
 
 import { generateOneTimeToken, generateOTP } from "../utils/generateOTP";
 import { Otp } from "../models/otp.model";
-import { Schema } from "mongoose";
+
 import { checkOtpLimit } from "../utils/checkOtpLimit";
 import moment from "moment";
 //@route POST | /api/v1/register
@@ -189,7 +189,7 @@ export const verifyRegisterOtpController = asyncHandler(
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
         "minutes"
-      ) > 1;
+      ) > 5;
     if (isOtpExpired) {
       res.status(403).json({
         error: "OTP expired",
@@ -300,23 +300,61 @@ export const logoutController = asyncHandler(
 
 export const profileUploadController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const user = req.user;
-    const imageUrl = req.body.imageUrl;
-    const userInfo = await User.findById(user?._id);
+    try {
+      const user = req.user;
 
-    if (userInfo?.profile?.url)
-      await deleteImage(userInfo?.profile?.public_alt);
+      // Check if file was uploaded
+      if (!req.file) {
+        res.status(400);
+        throw new Error("No image file provided");
+      }
 
-    const response = await uploadSingeImage(imageUrl, "NITE/user/profile");
-    await User.findByIdAndUpdate(userInfo?._id, {
-      profile: {
-        url: response.url,
-        public_alt: response.public_alt,
-      },
-    });
+      const userInfo = await User.findById(user?._id);
 
-    // console.log(response);
-    res.status(200).json({ message: "Avatar Uploaded.", url: response.url });
+      if (!userInfo) {
+        res.status(404);
+        throw new Error("User not found");
+      }
+
+      // Delete old profile image if exists
+      if (userInfo?.profile?.url && userInfo?.profile?.public_alt) {
+        await deleteImage(userInfo.profile.public_alt);
+      }
+
+      // Convert buffer to base64 for Cloudinary
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+      // Upload to Cloudinary
+      const response = await uploadSingleImage(dataURI, "NITE/user/profile");
+
+      // Update user profile
+      const updatedUser = await User.findByIdAndUpdate(
+        userInfo._id,
+        {
+          profile: {
+            url: response.url,
+            public_alt: response.public_alt,
+          },
+        },
+        { new: true }
+      ).select("-password");
+
+      res.status(200).json({
+        success: true,
+        message: "Profile image uploaded successfully",
+        data: {
+          profile: updatedUser?.profile,
+          user: {
+            id: updatedUser?._id,
+            name: updatedUser?.name,
+            email: updatedUser?.email,
+          },
+        },
+      });
+    } catch (error: any) {
+      next(error);
+    }
   }
 );
 
@@ -400,10 +438,10 @@ export const forgotPasswordController = asyncHandler(
 
     const token = generateOneTimeToken();
     const resetPasswordUrl = `${process.env.CLIENT_URL}/reset-password`;
-    // const otp = generateOTP(); // for production
-    const otp = "123456";
+    const otp = generateOTP(); // Generate real OTP
     const hashOtp = await bcrypt.hash(otp, 10); // Hash the OTP
 
+    // Use the new email template with centered OTP
     const body = otpEmailTemplate(otp, resetPasswordUrl);
 
     const existEmail = await Otp.findOne({ email });
@@ -441,27 +479,64 @@ export const forgotPasswordController = asyncHandler(
       });
     }
 
-    // Send email with OTP (uncomment when ready)
-    // try {
-    //   await sendEmail({
-    //     reciver_mail: email,
-    //     subject: "Password Reset - NITE.COM",
-    //     body,
-    //   });
-    // } catch (error) {
-    //   // If email sending fails, decrement the count since OTP wasn't actually sent
-    //   if (existEmail) {
-    //     await Otp.findByIdAndUpdate(existEmail._id, {
-    //       $inc: { count: -1 }, // Decrement count by 1
-    //     });
-    //   }
-    //   throw new Error("OTP send error");
-    // }
+    // Send email with OTP
+    try {
+      console.log(`📧 Sending password reset OTP to: ${email}`);
 
-    res.status(200).json({
-      message: `We are sending OTP to ${email}`,
-      token,
-    });
+      await sendEmail({
+        reciver_mail: email,
+        subject: "Password Reset - NITE.COM",
+        body,
+      });
+
+      console.log(`✅ Password reset email sent successfully to: ${email}`);
+
+      // For development, still show OTP in console for testing
+      if (process.env.NODE_ENV === "development") {
+        console.log(`🔄 DEV MODE: Password reset OTP for ${email}: ${otp}`);
+      }
+
+      // Send response
+      res.status(200).json({
+        success: true,
+        message: `Password reset OTP sent successfully to ${email}`,
+        token,
+        // Include OTP in development mode for testing convenience
+        ...(process.env.NODE_ENV === "development" && {
+          devOtp: otp,
+          devNote:
+            "Password reset OTP shown only in development mode. Check your email inbox for the actual OTP.",
+        }),
+      });
+    } catch (error: any) {
+      console.error("❌ Password reset email sending failed:", error.message);
+
+      // Clean up OTP record if email failed
+      if (data) {
+        await Otp.findByIdAndDelete(data._id);
+      } else if (existEmail) {
+        await Otp.findByIdAndUpdate(existEmail._id, {
+          $inc: { count: -1 },
+        });
+      }
+
+      // For development, still return OTP even if email fails
+      if (process.env.NODE_ENV === "development") {
+        console.log(`⚠️ Email failed, but returning OTP for testing: ${otp}`);
+        res.status(200).json({
+          success: false,
+          message: `Email sending failed, but here's your OTP for testing: ${otp}`,
+          token,
+          otp: otp,
+          error: error.message,
+          note: "Email service failed, but you can use this OTP for testing",
+        });
+      } else {
+        throw new Error(
+          "Failed to send password reset email. Please try again."
+        );
+      }
+    }
   }
 );
 

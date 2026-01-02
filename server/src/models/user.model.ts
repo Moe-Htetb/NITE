@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import mongoose, { Schema } from "mongoose";
-import crypto from "crypto";
 
 interface IUser {
   name: string;

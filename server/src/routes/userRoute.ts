@@ -27,6 +27,7 @@ import {
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
+import { upload } from "../utils/upload";
 
 const userRouter = Router();
 
@@ -49,8 +50,9 @@ userRouter.post("/logout", logoutController);
 //profile route
 userRouter.post(
   "/profileUpload",
-  imageUploadValidation,
-  validateRequest,
+  // imageUploadValidation,
+  // validateRequest,
+  upload.single("image"),
   protect,
   profileUploadController
 );

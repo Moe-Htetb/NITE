@@ -3,7 +3,7 @@ import { NextFunction, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Product } from "../models/product.model";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import { deleteImage, uploadSingeImage } from "../cloud/cloudinary";
+import { deleteImage, uploadSingleImage } from "../cloud/cloudinary";
 
 //@route POST | /api/v1/product/create
 // @desc create product
@@ -36,7 +36,7 @@ export const createProductController = asyncHandler(
     const images = req.files as Express.Multer.File[];
     const uploadedImages = await Promise.all(
       images.map(async (image) => {
-        const uploadImg = await uploadSingeImage(
+        const uploadImg = await uploadSingleImage(
           `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
           "NITE/products"
         );
@@ -160,7 +160,7 @@ export const updateProductController = asyncHandler(
     if (newImages && newImages.length > 0) {
       uploadedNewImages = await Promise.all(
         newImages.map(async (image) => {
-          const uploadImg = await uploadSingeImage(
+          const uploadImg = await uploadSingleImage(
             `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
             "fash.com/products"
           );
