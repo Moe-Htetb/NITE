@@ -1,14 +1,15 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
-const baseUrl =
-  import.meta.env.VITE_MODE === "development"
-    ? import.meta.env.VITE_LOCAL_API_URL
-    : import.meta.env.VITE_API_URL;
+let baseUrl =
+  import.meta.env.NODE_ENV === "development"
+    ? import.meta.env.LOCAL_API_URL
+    : import.meta.env.API_URL;
+console.log(baseUrl);
 
 export const apiSlice = createApi({
   reducerPath: "apiSlice",
-  baseQuery: fetchBaseQuery({ baseUrl }),
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8000/api/v1" }),
   tagTypes: ["auth"],
   endpoints: () => ({}),
 });

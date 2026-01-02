@@ -26,10 +26,9 @@ export const registerController = asyncHandler(
     }
 
     const token = generateOneTimeToken();
-    const otp = generateOTP(); // Generate real 6-digit OTP
+    const otp = generateOTP();
     const hashOtp = await bcrypt.hash(otp, 10);
 
-    // Store OTP in database
     const existEmail = await Otp.findOne({ email });
 
     let data;
@@ -62,11 +61,9 @@ export const registerController = asyncHandler(
       });
     }
 
-    // Prepare email
     const verificationUrl = `${process.env.CLIENT_LOCAL_URL}/verify-otp`;
     const emailBody = otpEmailTemplate(otp, verificationUrl);
 
-    // Send email with OTP
     try {
       console.log(`📧 Sending OTP email to: ${email}`);
 
@@ -76,29 +73,12 @@ export const registerController = asyncHandler(
         body: emailBody,
       });
 
-      console.log(`✅ Email sent successfully to: ${email}`);
-
-      // For development, still show OTP in console for testing
-      if (process.env.NODE_ENV === "development") {
-        console.log(`🔄 DEV MODE: OTP for ${email}: ${otp}`);
-      }
-
-      // Send response
       res.status(200).json({
         success: true,
         message: `OTP sent successfully to ${email}`,
         token,
-        // Include OTP in development mode for testing convenience
-        ...(process.env.NODE_ENV === "development" && {
-          devOtp: otp,
-          devNote:
-            "OTP shown only in development mode. Check your email inbox for the actual OTP.",
-        }),
       });
     } catch (error: any) {
-      console.error("❌ Email sending failed:", error.message);
-
-      // Clean up OTP record if email failed
       if (data) {
         await Otp.findByIdAndDelete(data._id);
       } else if (existEmail) {
@@ -106,21 +86,8 @@ export const registerController = asyncHandler(
           $inc: { count: -1 },
         });
       }
-
-      // For development, still return OTP even if email fails
-      if (process.env.NODE_ENV === "development") {
-        console.log(`⚠️ Email failed, but returning OTP for testing: ${otp}`);
-        res.status(200).json({
-          success: false,
-          message: `Email sending failed, but here's your OTP for testing: ${otp}`,
-          token,
-          otp: otp,
-          error: error.message,
-          note: "Email service failed, but you can use this OTP for testing",
-        });
-      } else {
-        throw new Error("Failed to send verification email. Please try again.");
-      }
+      res.status(400);
+      throw new Error("Failed to send OTP email. Please try again.");
     }
   }
 );
@@ -193,7 +160,7 @@ export const verifyRegisterOtpController = asyncHandler(
     if (isOtpExpired) {
       res.status(403).json({
         error: "OTP expired",
-        message: "Please request a new OTP",
+        message: "OTP expired.Please request a new OTP",
       });
       return;
     }
@@ -228,7 +195,9 @@ export const verifyRegisterOtpController = asyncHandler(
     // Generate auth token
     const loginToken = generateToken(res, user._id);
 
-    res.status(201).json({
+    res.status(201);
+    res.json({
+      success: true,
       message: "Account created successfully",
       user: {
         id: user._id,

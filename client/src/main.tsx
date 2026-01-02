@@ -5,8 +5,9 @@ import "./index.css";
 import { RouterProvider } from "react-router";
 import router from "./Routes/router";
 import { Provider } from "react-redux";
-import store from "./store/store";
+
 import { Toaster } from "sonner";
+import store from "./store/store";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
