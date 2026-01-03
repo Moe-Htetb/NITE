@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import {
   Sheet,
   SheetContent,
@@ -42,7 +42,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  Search,
   Menu,
   ShoppingCart,
   Heart,
@@ -51,9 +50,6 @@ import {
   Settings,
   LogOut,
   Home,
-  Sparkles,
-  TrendingUp,
-  BookOpen,
 } from "lucide-react";
 
 const Header = () => {
