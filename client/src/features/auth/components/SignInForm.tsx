@@ -70,8 +70,8 @@ const SignInForm = () => {
       </button>
 
       <div className="text-center">
-        <Link to={"/sign-up"} className="text-sm text-gray-600">
-          Don't have an account?{" "}
+        <Link to={"/register"} className="text-sm text-gray-600">
+          Don't have an account?
           <a
             href="#"
             className="text-emerald-600 hover:text-emerald-500 font-medium"
