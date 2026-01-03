@@ -2,7 +2,7 @@ import SignUpForm from "./SignUpForm";
 
 const SignUpSection = () => {
   return (
-    <div className="flex justify-center items-center mt-auto">
+    <div className="flex justify-center items-center h-screen">
       <SignUpForm />
     </div>
   );

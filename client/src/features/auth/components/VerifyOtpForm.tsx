@@ -11,6 +11,8 @@ import {
   useVerifyRegisterOtpMutation,
   type VerifyRegisterOtpResponse,
 } from "@/store/rtk/authApi";
+// import { useAppDispatch } from "@/types/product";
+// import { setAuthInfo } from "@/store/authSlice";
 
 const VerifyOtpForm = () => {
   const userInfoCookie = getCookie("userInfo");
@@ -20,7 +22,7 @@ const VerifyOtpForm = () => {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<otpFormInputs>({
     resolver: zodResolver(otpSchema),
     mode: "onChange",
@@ -33,11 +35,8 @@ const VerifyOtpForm = () => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
 
-  // const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
-
   const otpValue = watch("otp");
 
-  // Sync otpDigits with form value
   useEffect(() => {
     if (otpValue && otpValue.length === 6) {
       setOtpDigits(otpValue.split(""));
@@ -57,7 +56,6 @@ const VerifyOtpForm = () => {
     const newOtp = newOtpDigits.join("");
     setValue("otp", newOtp, { shouldValidate: true });
 
-    // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -76,7 +74,7 @@ const VerifyOtpForm = () => {
     e.preventDefault();
     const pasteData = e.clipboardData
       .getData("text")
-      .replace(/\D/g, "") // Remove non-digits
+      .replace(/\D/g, "")
       .slice(0, 6)
       .split("");
 
@@ -91,14 +89,12 @@ const VerifyOtpForm = () => {
     const newOtp = newOtpDigits.join("");
     setValue("otp", newOtp, { shouldValidate: true });
 
-    // Focus the last filled input
     const lastFilledIndex = pasteData.length - 1;
     if (lastFilledIndex >= 0 && lastFilledIndex < 6) {
       inputRefs.current[lastFilledIndex]?.focus();
     }
   };
 
-  // Register the hidden input for form submission
   const { ref: otpInputRef, ...otpRest } = register("otp");
   const [verifyRegisterMutation, { isLoading }] =
     useVerifyRegisterOtpMutation();
@@ -111,10 +107,13 @@ const VerifyOtpForm = () => {
         data
       ).unwrap();
 
+      console.log(response);
+
       if (response.success) {
         toast.success("OTP verified successfully!");
         removeCookie("userInfo");
         setCookie("authInfo", JSON.stringify(response.user));
+        // useAppDispatch(setAuthInfo(response.user));
       }
 
       if (response.user.role === "admin") {
@@ -229,10 +228,10 @@ const VerifyOtpForm = () => {
 
         <button
           type="submit"
-          disabled={isSubmitting || !isValid}
+          disabled={isSubmitting || isLoading}
           className="w-full bg-emerald-600 text-white py-3.5 px-4 rounded-xl font-semibold hover:bg-emerald-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600 shadow-sm hover:shadow-md"
         >
-          {isSubmitting ? "Verifying..." : "Verify code"}
+          {isLoading ? "Verifying..." : "Verify code"}
         </button>
 
         <div className="text-center space-y-4">

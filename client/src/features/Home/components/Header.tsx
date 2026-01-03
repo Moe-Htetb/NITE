@@ -1,11 +1,67 @@
 // Header.tsx
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/types/product";
+import {
+  clearAuthInfo,
+  selectAuthInfo,
+  refreshAuthFromCookie,
+} from "@/store/authSlice";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Search,
+  Menu,
+  ShoppingCart,
+  Heart,
+  User,
+  Package,
+  Settings,
+  LogOut,
+  Home,
+  Sparkles,
+  TrendingUp,
+  BookOpen,
+} from "lucide-react";
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [isUserOpen, setIsUserOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const authInfo = useAppSelector(selectAuthInfo);
 
   const categories = [
     {
@@ -32,387 +88,406 @@ const Header = () => {
   ];
 
   const userMenu = [
-    { name: "My Profile", icon: "👤" },
-    { name: "Orders", icon: "📦" },
-    { name: "Wishlist", icon: "❤️" },
-    { name: "Settings", icon: "⚙️" },
+    { name: "My Profile", icon: User, onClick: () => navigate("/profile") },
+    { name: "Orders", icon: Package, onClick: () => navigate("/orders") },
+    { name: "Wishlist", icon: Heart, onClick: () => navigate("/wishlist") },
+    { name: "Settings", icon: Settings, onClick: () => navigate("/settings") },
   ];
 
-  return (
-    <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between py-4">
-          {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">W</span>
-            </div>
-            <Link
-              to={"/"}
-              className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent"
-            >
-              WanderShop
-            </Link>
+  // This useEffect ensures the component is mounted before accessing localStorage/cookies
+  useEffect(() => {
+    setMounted(true);
+    dispatch(refreshAuthFromCookie());
+  }, [dispatch]);
+
+  // Handle sign out
+  const handleSignOut = () => {
+    dispatch(clearAuthInfo());
+    navigate("/");
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return "US";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (!mounted) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="container flex h-16 items-center justify-between px-4">
+          {/* Skeleton loader */}
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 animate-pulse rounded-xl bg-gray-200"></div>
+            <div className="h-6 w-32 animate-pulse rounded bg-gray-200"></div>
           </div>
+          <div className="h-10 w-24 animate-pulse rounded bg-gray-200"></div>
+        </div>
+      </header>
+    );
+  }
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            <a
-              href="#"
-              className="text-gray-700 hover:text-emerald-600 font-medium transition duration-300"
-            >
-              Home
-            </a>
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4">
+        {/* Logo */}
+        <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500">
+              <span className="text-lg font-bold text-white">W</span>
+            </div>
+            <span className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+              WanderShop
+            </span>
+          </Link>
+        </div>
 
-            {/* Categories Dropdown */}
-            <div className="relative">
-              <button
-                className="flex items-center space-x-1 text-gray-700 hover:text-emerald-600 font-medium transition duration-300"
-                onMouseEnter={() => setIsCategoryOpen(true)}
-                onMouseLeave={() => setIsCategoryOpen(false)}
-              >
-                <span>Categories</span>
-                <svg
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    isCategoryOpen ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex items-center gap-6">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="/"
+                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
+                  >
+                    <Home className="mr-2 h-4 w-4" />
+                    Home
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
 
-              {isCategoryOpen && (
-                <div
-                  className="absolute top-full left-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-100 p-6"
-                  onMouseEnter={() => setIsCategoryOpen(true)}
-                  onMouseLeave={() => setIsCategoryOpen(false)}
-                >
-                  <div className="grid grid-cols-2 gap-6">
-                    {categories.map((category, index) => (
-                      <div key={index}>
-                        <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="flex items-center gap-1">
+                  Categories
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid w-100 gap-3 p-4 md:w-125 md:grid-cols-2 lg:w-150">
+                    {categories.map((category) => (
+                      <div key={category.name}>
+                        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                           {category.name}
                         </h3>
-                        <ul className="space-y-2">
-                          {category.items.map((item, itemIndex) => (
-                            <li key={itemIndex}>
-                              <a
-                                href="#"
-                                className="text-gray-600 hover:text-emerald-600 text-sm transition duration-300"
-                              >
-                                {item}
-                              </a>
+                        <ul className="space-y-1">
+                          {category.items.map((item) => (
+                            <li key={item}>
+                              <NavigationMenuLink asChild>
+                                <a
+                                  href="#"
+                                  className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                >
+                                  <div className="text-sm font-medium leading-none">
+                                    {item}
+                                  </div>
+                                </a>
+                              </NavigationMenuLink>
                             </li>
                           ))}
                         </ul>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <a
-                      href="#"
-                      className="text-emerald-600 font-medium text-sm hover:text-emerald-700 transition duration-300"
-                    >
-                      View All Categories →
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
 
-            <a
-              href="#"
-              className="text-gray-700 hover:text-emerald-600 font-medium transition duration-300"
-            >
-              Deals
-            </a>
-            <a
-              href="#"
-              className="text-gray-700 hover:text-emerald-600 font-medium transition duration-300"
-            >
-              New Arrivals
-            </a>
-            <a
-              href="#"
-              className="text-gray-700 hover:text-emerald-600 font-medium transition duration-300"
-            >
-              Stories
-            </a>
-          </nav>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="#"
+                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
+                  >
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Deals
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
 
-          {/* Desktop Search and Actions */}
-          <div className="hidden lg:flex items-center space-x-6">
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search gear & destinations..."
-                className="pl-10 pr-4 py-2.5 w-80 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-300"
-              />
-              <svg
-                className="w-5 h-5 text-gray-400 absolute left-3 top-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="#"
+                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    New Arrivals
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
 
-            {/* Wishlist */}
-            <button className="relative p-2 text-gray-600 hover:text-emerald-600 transition duration-300">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
-              </svg>
-            </button>
-
-            {/* Cart */}
-            <button className="relative p-2 text-gray-600 hover:text-emerald-600 transition duration-300">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <span className="absolute -top-1 -right-1 bg-linear-to-r from-emerald-500 to-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                3
-              </span>
-            </button>
-
-            {/* User Account */}
-            <div className="relative">
-              <button
-                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition duration-300"
-                onClick={() => setIsUserOpen(!isUserOpen)}
-              >
-                <div className="w-8 h-8 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">JS</span>
-                </div>
-                <svg
-                  className={`w-4 h-4 text-gray-600 transition-transform duration-300 ${
-                    isUserOpen ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-
-              {isUserOpen && (
-                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="font-medium text-gray-800">John Smith</p>
-                    <p className="text-sm text-gray-500">john@example.com</p>
-                  </div>
-                  <div className="py-2">
-                    {userMenu.map((item, index) => (
-                      <a
-                        key={index}
-                        href="#"
-                        className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition duration-300"
-                      >
-                        <span className="text-lg">{item.icon}</span>
-                        <span>{item.name}</span>
-                      </a>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-100 pt-2">
-                    <a
-                      href="#"
-                      className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition duration-300"
-                    >
-                      <span className="text-lg">🚪</span>
-                      <span>Sign Out</span>
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-50 transition duration-300"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg
-              className="w-6 h-6 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    to="#"
+                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Stories
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden border-t border-gray-100 py-4">
-            {/* Mobile Search */}
-            <div className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-full px-4 py-3 pl-10 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-              <svg
-                className="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+        {/* Desktop Search and Actions */}
+        <div className="hidden lg:flex items-center gap-4">
+          {/* Search */}
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search gear & destinations..."
+              className="pl-9 rounded-full"
+            />
+          </div>
 
-            {/* Mobile Navigation */}
-            <nav className="space-y-2">
-              <a
-                href="#"
-                className="block py-2 px-4 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition duration-300"
-              >
-                Home
-              </a>
+          {/* Wishlist */}
+          <Button variant="ghost" size="icon" className="relative">
+            <Heart className="h-5 w-5" />
+            <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs">
+              2
+            </Badge>
+          </Button>
 
-              {/* Mobile Categories Accordion */}
-              <div className="border-b border-gray-100">
-                <button
-                  className="flex items-center justify-between w-full py-2 px-4 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition duration-300"
-                  onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+          {/* Cart */}
+          <Button variant="ghost" size="icon" className="relative">
+            <ShoppingCart className="h-5 w-5" />
+            <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-linear-to-r from-emerald-500 to-cyan-500">
+              3
+            </Badge>
+          </Button>
+
+          {/* User Account */}
+          {authInfo ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
                 >
-                  <span>Categories</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      isCategoryOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-linear-to-br from-emerald-500 to-cyan-500 text-white">
+                      {getInitials(authInfo.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {authInfo.name}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {authInfo.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {userMenu.map((item) => (
+                  <DropdownMenuItem
+                    key={item.name}
+                    className="cursor-pointer"
+                    onClick={item.onClick}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.name}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button asChild variant="ghost">
+              <Link to="/login">Sign In</Link>
+            </Button>
+          )}
+        </div>
 
-                {isCategoryOpen && (
-                  <div className="pl-6 pr-4 pb-2 space-y-1">
-                    {categories
-                      .flatMap((category) => category.items)
-                      .map((item, index) => (
-                        <a
-                          key={index}
-                          href="#"
-                          className="block py-2 text-sm text-gray-600 hover:text-emerald-600 transition duration-300"
+        {/* Mobile Menu */}
+        <div className="flex lg:hidden items-center gap-2">
+          <Button variant="ghost" size="icon" className="relative">
+            <Heart className="h-5 w-5" />
+          </Button>
+
+          <Button variant="ghost" size="icon" className="relative">
+            <ShoppingCart className="h-5 w-5" />
+            <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-linear-to-r from-emerald-500 to-cyan-500">
+              3
+            </Badge>
+          </Button>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[85vw] sm:w-100">
+              <SheetHeader>
+                <SheetTitle className="text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500">
+                      <span className="text-lg font-bold text-white">W</span>
+                    </div>
+                    <span className="text-xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                      WanderShop
+                    </span>
+                  </div>
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                {/* Mobile Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    className="pl-9 rounded-full"
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Mobile Navigation */}
+                <nav className="space-y-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <Link to="/" className="flex items-center">
+                      <Home className="mr-2 h-4 w-4" />
+                      Home
+                    </Link>
+                  </Button>
+
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="categories" className="border-none">
+                      <AccordionTrigger className="py-2 hover:no-underline">
+                        <div className="flex items-center">Categories</div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2 pl-4">
+                          {categories.flatMap((category) =>
+                            category.items.map((item) => (
+                              <Button
+                                key={item}
+                                variant="ghost"
+                                className="w-full justify-start text-sm"
+                                asChild
+                              >
+                                <a href="#">{item}</a>
+                              </Button>
+                            ))
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="#" className="flex items-center">
+                      <TrendingUp className="mr-2 h-4 w-4" />
+                      Deals
+                    </a>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="#" className="flex items-center">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      New Arrivals
+                    </a>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <a href="#" className="flex items-center">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Stories
+                    </a>
+                  </Button>
+                </nav>
+
+                <Separator />
+
+                {/* Mobile User Actions */}
+                {authInfo ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-linear-to-br from-emerald-500 to-cyan-500 text-white">
+                          {getInitials(authInfo.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{authInfo.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {authInfo.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {userMenu.slice(0, 3).map((item) => (
+                        <Button
+                          key={item.name}
+                          variant="outline"
+                          className="h-auto flex-col gap-1 py-3"
+                          size="sm"
+                          onClick={item.onClick}
                         >
-                          {item}
-                        </a>
+                          <item.icon className="h-4 w-4" />
+                          <span className="text-xs">{item.name}</span>
+                        </Button>
                       ))}
+                    </div>
+
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Button className="w-full" asChild>
+                      <Link to="/login">Sign In</Link>
+                    </Button>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link to="/register">Create Account</Link>
+                    </Button>
                   </div>
                 )}
               </div>
-
-              <a
-                href="#"
-                className="block py-2 px-4 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition duration-300"
-              >
-                Deals
-              </a>
-              <a
-                href="#"
-                className="block py-2 px-4 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition duration-300"
-              >
-                New Arrivals
-              </a>
-              <a
-                href="#"
-                className="block py-2 px-4 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition duration-300"
-              >
-                Stories
-              </a>
-            </nav>
-
-            {/* Mobile User Actions */}
-            <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-              <div className="flex items-center space-x-4 px-4 py-2">
-                <div className="w-10 h-10 bg-linear-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">JS</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">John Smith</p>
-                  <p className="text-sm text-gray-500">View Profile</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <button className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition duration-300">
-                  <span className="text-lg">👤</span>
-                  <span className="text-xs mt-1">Profile</span>
-                </button>
-                <button className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition duration-300">
-                  <span className="text-lg">📦</span>
-                  <span className="text-xs mt-1">Orders</span>
-                </button>
-                <button className="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition duration-300">
-                  <span className="text-lg">❤️</span>
-                  <span className="text-xs mt-1">Wishlist</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

@@ -69,7 +69,7 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-md p-6 bg-gray-100/50 rounded-lg shadow-md">
       <form onSubmit={handleSubmit(onSubmitHandler)}>
         <FieldSet>
           <FieldGroup className="space-y-4">
@@ -90,7 +90,6 @@ const SignUpForm = () => {
               )}
             </Field>
 
-            {/* Email Field */}
             <Field>
               <FieldLabel htmlFor="email">Email Address</FieldLabel>
               <Input
@@ -190,7 +189,7 @@ const SignUpForm = () => {
 
       <div className="mt-4 text-center">
         <p className="text-sm text-gray-600">
-          Already have an account?{" "}
+          Already have an account?
           <a
             href="/login"
             className="text-blue-600 hover:underline font-medium"

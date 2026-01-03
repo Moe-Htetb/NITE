@@ -9,8 +9,9 @@ const router = createBrowserRouter([
     path: "/",
     errorElement: <ErrorPage />,
     element: <MainLayout />,
-    children: [...publicRoute, ...authRoute],
+    children: [...publicRoute],
   },
+  ...authRoute,
 ]);
 
 export default router;
