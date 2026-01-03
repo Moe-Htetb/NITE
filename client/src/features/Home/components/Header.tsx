@@ -194,73 +194,18 @@ const Header = () => {
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="#"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Deals
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="#"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    New Arrivals
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    to="#"
-                    className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50"
-                  >
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Stories
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
 
         {/* Desktop Search and Actions */}
         <div className="hidden lg:flex items-center gap-4">
-          {/* Search */}
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search gear & destinations..."
-              className="pl-9 rounded-full"
-            />
-          </div>
-
-          {/* Wishlist */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Heart className="h-5 w-5" />
-            <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs">
-              2
-            </Badge>
-          </Button>
-
-          {/* Cart */}
           <Button variant="ghost" size="icon" className="relative">
             <ShoppingCart className="h-5 w-5" />
             <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-linear-to-r from-emerald-500 to-cyan-500">
               3
             </Badge>
           </Button>
-
           {/* User Account */}
           {authInfo ? (
             <DropdownMenu>
@@ -318,10 +263,6 @@ const Header = () => {
         {/* Mobile Menu */}
         <div className="flex lg:hidden items-center gap-2">
           <Button variant="ghost" size="icon" className="relative">
-            <Heart className="h-5 w-5" />
-          </Button>
-
-          <Button variant="ghost" size="icon" className="relative">
             <ShoppingCart className="h-5 w-5" />
             <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-linear-to-r from-emerald-500 to-cyan-500">
               3
@@ -349,17 +290,6 @@ const Header = () => {
               </SheetHeader>
 
               <div className="mt-6 space-y-6">
-                {/* Mobile Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search products..."
-                    className="pl-9 rounded-full"
-                  />
-                </div>
-
-                <Separator />
-
                 {/* Mobile Navigation */}
                 <nav className="space-y-2">
                   <Button
@@ -396,39 +326,6 @@ const Header = () => {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <a href="#" className="flex items-center">
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                      Deals
-                    </a>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <a href="#" className="flex items-center">
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      New Arrivals
-                    </a>
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <a href="#" className="flex items-center">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      Stories
-                    </a>
-                  </Button>
                 </nav>
 
                 <Separator />

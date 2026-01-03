@@ -18,6 +18,7 @@ const getAuthInfoFromCookie = (): IAuthInfo | null => {
   try {
     const authInfoCookie = Cookies.get("authInfo");
     const authTokenCookie = Cookies.get("token");
+    if (!authInfoCookie) return null;
     const authData = { ...JSON.parse(authInfoCookie!), token: authTokenCookie };
     if (authInfoCookie) {
       return authData;
