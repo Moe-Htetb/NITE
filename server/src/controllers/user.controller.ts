@@ -185,27 +185,16 @@ export const verifyRegisterOtpController = asyncHandler(
       return;
     }
 
-    // OTP verified successfully - Create user account
-    const user = await User.create({
+    await User.create({
       name,
       email,
       password,
     });
 
-    // Generate auth token
-    const loginToken = generateToken(res, user._id);
-
     res.status(201);
     res.json({
       success: true,
       message: "Account created successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token: loginToken,
     });
   }
 );
@@ -234,6 +223,7 @@ export const loginController = asyncHandler(
 
       const LoginToken = generateToken(res, user._id);
       res.status(200).json({
+        success: true,
         message: "Login successful",
         user: {
           id: user._id,

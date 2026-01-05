@@ -26,6 +26,17 @@ export interface VerifyRegisterOtpRequest {
 export interface VerifyRegisterOtpResponse {
   success: boolean;
   message: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
   user: {
     id: string;
     name: string;
@@ -71,6 +82,17 @@ export const authApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["auth"],
     }),
+    login: builder.mutation<LoginResponse, LoginRequest>({
+      query: (data) => ({
+        url: "/login",
+        method: "POST",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: ["auth"],
+    }),
   }),
 });
 
@@ -78,4 +100,5 @@ export const {
   useGetUserInfoQuery,
   useRegisterMutation,
   useVerifyRegisterOtpMutation,
+  useLoginMutation,
 } = authApiSlice;
