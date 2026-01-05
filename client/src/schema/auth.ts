@@ -42,3 +42,11 @@ export const otpSchema = z.object({
     .length(6, "OTP must be exactly 6 digits")
     .regex(/^\d+$/, "OTP must contain only numbers"),
 });
+
+export const signInSchema = z.object({
+  email: z
+    .email("Please provide a valid email address")
+    .transform((email) => email.toLowerCase().trim()),
+  password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().optional(),
+});

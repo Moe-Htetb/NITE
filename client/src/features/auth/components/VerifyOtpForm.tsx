@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router";
-import { getCookie, removeCookie, setCookie } from "react-use-cookie";
+import { getCookie, removeCookie } from "react-use-cookie";
 import { useEffect, useRef, useState } from "react";
 
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import {
   useVerifyRegisterOtpMutation,
   type VerifyRegisterOtpResponse,
 } from "@/store/rtk/authApi";
+
 // import { useAppDispatch } from "@/types/product";
 // import { setAuthInfo } from "@/store/authSlice";
 
@@ -112,14 +113,7 @@ const VerifyOtpForm = () => {
       if (response.success) {
         toast.success("OTP verified successfully!");
         removeCookie("userInfo");
-        setCookie("authInfo", JSON.stringify(response.user));
-        // useAppDispatch(setAuthInfo(response.user));
-      }
-
-      if (response.user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
+        navigate("/login");
       }
 
       setOtpDigits(["", "", "", "", "", ""]);
