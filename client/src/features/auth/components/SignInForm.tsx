@@ -46,11 +46,13 @@ const SignInForm = () => {
   const onSubmit = async (data: signInFormInputs) => {
     try {
       const response = await login(data).unwrap();
+      console.log(response);
 
       if (response.success) {
         toast.success("Login successful!");
 
         // Set cookie with remember me option
+
         setCookie("authInfo", JSON.stringify(response.user));
 
         // Navigate based on user role
