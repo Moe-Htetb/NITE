@@ -60,7 +60,12 @@ const Header = () => {
   const navigate = useNavigate();
 
   const authInfo = useAppSelector(selectAuthInfo);
-  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+  const [
+    logout,
+    {
+      // isLoading
+    },
+  ] = useLogoutMutation();
 
   const categories = [
     {
@@ -93,15 +98,12 @@ const Header = () => {
     { name: "Settings", icon: Settings, onClick: () => navigate("/settings") },
   ];
 
-  // This useEffect ensures the component is mounted before accessing localStorage/cookies
-
   useEffect(() => {
     setMounted(true);
 
     dispatch(refreshAuthFromCookie());
   }, [dispatch]);
 
-  // Handle sign out
   const handleSignOut = async () => {
     try {
       const response = await logout().unwrap();
