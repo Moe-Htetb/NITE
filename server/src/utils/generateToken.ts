@@ -10,8 +10,8 @@ export const generateToken = (res: Response, userId: Types.ObjectId) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
-    maxAge: 7 * 60 * 60 * 24 * 1000,
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    maxAge: 7 * 60 * 60 * 24 * 1000, // 7 days
   });
   return token;
 };

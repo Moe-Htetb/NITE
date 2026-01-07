@@ -8,10 +8,12 @@ import { Provider } from "react-redux";
 
 import { Toaster } from "sonner";
 import store from "./store/store";
+import AuthInitializer from "./components/Authinitializer";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
+      <AuthInitializer />
       <RouterProvider router={router} />
       <Toaster position="top-right" richColors={true} />
     </Provider>

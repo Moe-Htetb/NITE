@@ -51,6 +51,8 @@ import {
   LogOut,
   Home,
 } from "lucide-react";
+import { useLogoutMutation } from "@/store/rtk/authApi";
+import { toast } from "sonner";
 
 const Header = () => {
   const [mounted, setMounted] = useState(false);
@@ -58,6 +60,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   const authInfo = useAppSelector(selectAuthInfo);
+  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
   const categories = [
     {
@@ -91,15 +94,26 @@ const Header = () => {
   ];
 
   // This useEffect ensures the component is mounted before accessing localStorage/cookies
+
   useEffect(() => {
     setMounted(true);
+
     dispatch(refreshAuthFromCookie());
   }, [dispatch]);
 
   // Handle sign out
-  const handleSignOut = () => {
-    dispatch(clearAuthInfo());
-    navigate("/");
+  const handleSignOut = async () => {
+    try {
+      const response = await logout().unwrap();
+
+      if (response.success) {
+        toast.success(response.message);
+        dispatch(clearAuthInfo());
+        navigate("/");
+      }
+    } catch (error) {
+      toast.error("Error signing out. Please try again.");
+    }
   };
 
   const getInitials = (name?: string) => {

@@ -45,7 +45,10 @@ export interface LoginResponse {
   };
   token: string;
 }
-
+export interface LogoutResponse {
+  success: boolean;
+  message: string;
+}
 export const authApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getUserInfo: builder.query({
@@ -93,6 +96,13 @@ export const authApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["auth"],
     }),
+    logout: builder.mutation<LogoutResponse, void>({
+      query: () => ({
+        url: "/logout",
+        method: "POST",
+      }),
+      invalidatesTags: ["auth"],
+    }),
   }),
 });
 
@@ -101,4 +111,5 @@ export const {
   useRegisterMutation,
   useVerifyRegisterOtpMutation,
   useLoginMutation,
+  useLogoutMutation,
 } = authApiSlice;

@@ -4,7 +4,7 @@ import { User } from "../models/user.model";
 import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { deleteImage, uploadSingleImage } from "../cloud/cloudinary";
-import bcrypt from "bcryptjs";
+import bcrypt, { truncates } from "bcryptjs";
 import { otpEmailTemplate } from "../utils/emailTemplate";
 import { sendEmail } from "../utils/sentEmail";
 
@@ -247,9 +247,9 @@ export const logoutController = asyncHandler(
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
-    res.status(200).json({ message: "Logout successful" });
+    res.status(200).json({ success: true, message: "Logout successful" });
   }
 );
 
