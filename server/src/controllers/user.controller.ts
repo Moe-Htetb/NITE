@@ -208,6 +208,7 @@ export const loginController = asyncHandler(
       const { email, password } = req.body;
 
       const user = await User.findOne({ email });
+      // console.log(user);
 
       if (!user) {
         res.status(401);
@@ -222,6 +223,14 @@ export const loginController = asyncHandler(
       }
 
       const LoginToken = generateToken(res, user._id);
+      let profileUrl = "";
+      if (
+        user.profile &&
+        Array.isArray(user.profile) &&
+        user.profile.length > 0
+      ) {
+        profileUrl = user.profile[0]?.url || "";
+      }
       res.status(200).json({
         success: true,
         message: "Login successful",
@@ -229,6 +238,7 @@ export const loginController = asyncHandler(
           id: user._id,
           name: user.name,
           email: user.email,
+          profile: profileUrl,
           role: user.role,
         },
         token: LoginToken,
@@ -276,8 +286,29 @@ export const profileUploadController = asyncHandler(
       }
 
       // Delete old profile image if exists
-      if (userInfo?.profile?.url && userInfo?.profile?.public_alt) {
-        await deleteImage(userInfo.profile.public_alt);
+      if (userInfo.profile) {
+        // Check if profile is an object with public_alt property
+        if (userInfo.profile.public_alt) {
+          console.log(
+            "Deleting old image with public_alt:",
+            userInfo.profile.public_alt
+          );
+          await deleteImage(userInfo.profile.public_alt);
+        }
+        // Or if profile is an array (check your User model structure)
+        else if (
+          Array.isArray(userInfo.profile) &&
+          userInfo.profile.length > 0
+        ) {
+          const firstProfile = userInfo.profile[0];
+          if (firstProfile.public_alt) {
+            console.log(
+              "Deleting old image from array with public_alt:",
+              firstProfile.public_alt
+            );
+            await deleteImage(firstProfile.public_alt);
+          }
+        }
       }
 
       // Convert buffer to base64 for Cloudinary
@@ -287,36 +318,54 @@ export const profileUploadController = asyncHandler(
       // Upload to Cloudinary
       const response = await uploadSingleImage(dataURI, "NITE/user/profile");
 
-      // Update user profile
+      // Update user profile - ensure consistent structure
       const updatedUser = await User.findByIdAndUpdate(
         userInfo._id,
         {
           profile: {
             url: response.url,
-            public_alt: response.public_alt,
+            public_alt: response.public_alt, // Make sure this matches what Cloudinary returns
           },
         },
         { new: true }
       ).select("-password");
 
+      // Get profile URL for response
+      let profileUrl = "";
+      let profilePublicAlt = "";
+
+      if (updatedUser!.profile) {
+        if (updatedUser!.profile.url) {
+          profileUrl = updatedUser!.profile.url;
+          profilePublicAlt = updatedUser!.profile.public_alt;
+        }
+        // Check if it's an array (old structure)
+        else if (
+          Array.isArray(updatedUser!.profile) &&
+          updatedUser!.profile.length > 0
+        ) {
+          profileUrl = updatedUser!.profile[0]?.url || "";
+          profilePublicAlt = updatedUser!.profile[0]?.public_alt || "";
+        }
+      }
+
       res.status(200).json({
         success: true,
         message: "Profile image uploaded successfully",
-        data: {
-          profile: updatedUser?.profile,
-          user: {
-            id: updatedUser?._id,
-            name: updatedUser?.name,
-            email: updatedUser?.email,
-          },
+        user: {
+          id: updatedUser!._id,
+          name: updatedUser!.name,
+          email: updatedUser!.email,
+          profile: profileUrl,
+          role: updatedUser!.role,
         },
       });
     } catch (error: any) {
+      console.error("Profile upload error:", error);
       next(error);
     }
   }
 );
-
 //@route POST | /api/v1/profile
 // @desc login user getting profile
 // @access Private

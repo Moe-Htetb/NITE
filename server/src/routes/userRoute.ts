@@ -48,7 +48,7 @@ userRouter.post("/login", loginValidation, validateRequest, loginController);
 userRouter.post("/logout", logoutController);
 
 //profile route
-userRouter.post(
+userRouter.patch(
   "/profileUpload",
   // imageUploadValidation,
   // validateRequest,

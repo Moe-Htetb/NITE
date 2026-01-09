@@ -1,5 +1,11 @@
+import UserProfileForm from "./UserProfileForm";
+
 const UserProfileSection = () => {
-  return <div>UserProfileSection</div>;
+  return (
+    <section className="flex justify-center items-center mt-auto ">
+      <UserProfileForm />
+    </section>
+  );
 };
 
 export default UserProfileSection;

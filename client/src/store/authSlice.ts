@@ -4,11 +4,12 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 
 // Remove token from interface since it's HTTP-only
-interface IAuthInfo {
+export interface IAuthInfo {
   id: string;
   name: string;
   email: string;
-  role: string; // Add role if you need it
+  role: string;
+  profile?: string;
 }
 
 interface IAuthState {
