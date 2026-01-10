@@ -202,9 +202,6 @@ const UserProfileForm = () => {
 
           <div className="space-y-4 flex-1">
             <h3 className="text-lg font-semibold">Profile Picture</h3>
-            <p className="text-sm text-gray-600">
-              Upload a new profile image (JPEG, PNG, max 2MB)
-            </p>
 
             <div className="space-y-4">
               <input
@@ -225,7 +222,7 @@ const UserProfileForm = () => {
                   <Upload className="mr-2 h-4 w-4" />
                   Choose File
                 </Button>
-
+                {/* 
                 {selectedFile && (
                   <div className="flex items-center space-x-2 text-sm">
                     <span className="text-gray-700 truncate max-w-xs">
@@ -235,7 +232,7 @@ const UserProfileForm = () => {
                       ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                     </span>
                   </div>
-                )}
+                )} */}
               </div>
               {/* 
               {userInfo.profile && !selectedFile && (
