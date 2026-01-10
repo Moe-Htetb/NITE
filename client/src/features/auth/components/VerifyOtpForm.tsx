@@ -11,6 +11,8 @@ import {
   useVerifyRegisterOtpMutation,
   type VerifyRegisterOtpResponse,
 } from "@/store/rtk/authApi";
+import { useAppSelector } from "@/types/product";
+import { selectAuthInfo } from "@/store/authSlice";
 
 // import { useAppDispatch } from "@/types/product";
 // import { setAuthInfo } from "@/store/authSlice";
@@ -138,6 +140,12 @@ const VerifyOtpForm = () => {
       toast.error(error.data?.message || "Failed to resend OTP");
     }
   };
+  const authInfo = useAppSelector(selectAuthInfo);
+  useEffect(() => {
+    if (authInfo) {
+      navigate("/");
+    }
+  }, [navigate, authInfo]);
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">

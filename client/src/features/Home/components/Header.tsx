@@ -1,12 +1,8 @@
 // Header.tsx
-import { useState, useEffect } from "react";
+// import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/types/product";
-import {
-  clearAuthInfo,
-  selectAuthInfo,
-  refreshAuthFromCookie,
-} from "@/store/authSlice";
+import { clearAuthInfo, selectAuthInfo } from "@/store/authSlice";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,7 +51,6 @@ import { useLogoutMutation } from "@/store/rtk/authApi";
 import { toast } from "sonner";
 
 const Header = () => {
-  const [mounted, setMounted] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -99,12 +94,6 @@ const Header = () => {
     { name: "Settings", icon: Settings, onClick: () => navigate("/settings") },
   ];
 
-  useEffect(() => {
-    setMounted(true);
-
-    dispatch(refreshAuthFromCookie());
-  }, [dispatch]);
-
   const handleSignOut = async () => {
     try {
       const response = await logout().unwrap();
@@ -129,20 +118,20 @@ const Header = () => {
       .slice(0, 2);
   };
 
-  if (!mounted) {
-    return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
-          {/* Skeleton loader */}
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 animate-pulse rounded-xl bg-gray-200"></div>
-            <div className="h-6 w-32 animate-pulse rounded bg-gray-200"></div>
-          </div>
-          <div className="h-10 w-24 animate-pulse rounded bg-gray-200"></div>
-        </div>
-      </header>
-    );
-  }
+  // if (!mounted) {
+  //   return (
+  //     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+  //       <div className="container flex h-16 items-center justify-between px-4">
+  //         {/* Skeleton loader */}
+  //         <div className="flex items-center gap-3">
+  //           <div className="h-10 w-10 animate-pulse rounded-xl bg-gray-200"></div>
+  //           <div className="h-6 w-32 animate-pulse rounded bg-gray-200"></div>
+  //         </div>
+  //         <div className="h-10 w-24 animate-pulse rounded bg-gray-200"></div>
+  //       </div>
+  //     </header>
+  //   );
+  // }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">

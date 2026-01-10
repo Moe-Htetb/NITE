@@ -403,8 +403,11 @@ export const updateNameController = asyncHandler(
     const { user } = req;
     const { name } = req.body;
 
-    await User.findByIdAndUpdate(user?._id, { name });
-    res.status(200).json({ message: "Name Updated Successfully" });
+    const updatedUser = await User.findByIdAndUpdate(user?._id, { name });
+    res.status(200).json({
+      message: "Name Updated Successfully",
+      name: updatedUser?.name,
+    });
   }
 );
 
