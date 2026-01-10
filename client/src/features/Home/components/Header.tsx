@@ -32,7 +32,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -60,6 +60,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   const authInfo = useAppSelector(selectAuthInfo);
+
   const [
     logout,
     {
@@ -226,8 +227,9 @@ const Header = () => {
                   variant="ghost"
                   className="relative h-8 w-8 rounded-full"
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-linear-to-br from-emerald-500 to-cyan-500 text-white">
+                  <Avatar className="h-8 w-8 border-2 border-gray-300">
+                    <AvatarImage src={authInfo.profile} alt={"User Profile"} />
+                    <AvatarFallback className="bg-gray-800 text-white text-2xl">
                       {getInitials(authInfo.name)}
                     </AvatarFallback>
                   </Avatar>
