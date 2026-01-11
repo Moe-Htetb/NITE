@@ -25,6 +25,7 @@ import {
   verifyOtpValidator,
   resetPasswordValidator,
   verifyRegisterOtpValidation,
+  UpdateEmailOtpValidator,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { protect } from "../middlewares/authMiddleware";
@@ -65,7 +66,13 @@ userRouter.post(
   protect,
   updateEmailController
 );
-userRouter.post("/verify-update-email", protect, updateEmailVerifyController);
+userRouter.post(
+  "/verify-update-email",
+  UpdateEmailOtpValidator,
+  validateRequest,
+  protect,
+  updateEmailVerifyController
+);
 userRouter.post(
   "/updateName",
   updateNameValidation,

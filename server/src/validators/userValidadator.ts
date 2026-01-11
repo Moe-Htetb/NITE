@@ -104,6 +104,15 @@ export const updateEmailValidation = [
     .isEmail()
     .withMessage("Enter a valid Email"),
 ];
+export const UpdateEmailOtpValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Valid email is required"),
+  body("otp").notEmpty().withMessage("Otp is required"),
+  body("token").notEmpty().withMessage("token is required"),
+];
 
 export const updateNameValidation = [
   body("name").notEmpty().withMessage("Name is required"),

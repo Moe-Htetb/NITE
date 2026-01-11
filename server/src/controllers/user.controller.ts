@@ -656,7 +656,7 @@ export const updateEmailVerifyController = asyncHandler(
     await Otp.findByIdAndDelete(otpRow._id);
 
     // Generate new login token (optional, since email is part of auth info)
-    const newLoginToken = generateToken(res, currentUser._id);
+    // const newLoginToken = generateToken(res, currentUser._id);
 
     // Send success notification to new email
     const successBody = `
@@ -684,14 +684,14 @@ export const updateEmailVerifyController = asyncHandler(
       success: true,
       message: "Email updated successfully",
       email: newEmail,
-      user: {
-        id: currentUser._id,
-        name: currentUser.name,
-        email: newEmail,
-        profile: currentUser.profile?.url || "",
-        role: currentUser.role,
-      },
-      token: newLoginToken,
+      // user: {
+      //   id: currentUser._id,
+      //   name: currentUser.name,
+      //   email: newEmail,
+      //   profile: currentUser.profile?.url || "",
+      //   role: currentUser.role,
+      // },
+      // token: newLoginToken,
     });
   }
 );
