@@ -14,6 +14,22 @@ export interface UpdateUserProfileRequest extends FormData {
   image: File;
 }
 
+export interface UpdateUserNameRequest {
+  name: string;
+}
+export interface UpdateUserNameResponse {
+  message: string;
+  name: string;
+}
+
+export interface UpdateEmailRequest {
+  email: string;
+}
+export interface UpdateEmailResponse {
+  message: string;
+  email: string;
+}
+
 export const userApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     updateUserProfile: builder.mutation<
@@ -27,9 +43,20 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["user"],
     }),
-    updateUserName: builder.mutation({
+    updateUserName: builder.mutation<
+      UpdateUserNameResponse,
+      UpdateUserNameRequest
+    >({
       query: (data) => ({
         url: "/updateName",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["user"],
+    }),
+    updateEmail: builder.mutation<UpdateEmailResponse, UpdateEmailRequest>({
+      query: (data) => ({
+        url: "/updateEmail",
         method: "POST",
         body: data,
       }),
@@ -38,5 +65,8 @@ export const userApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useUpdateUserProfileMutation, useUpdateUserNameMutation } =
-  userApiSlice;
+export const {
+  useUpdateUserProfileMutation,
+  useUpdateUserNameMutation,
+  useUpdateEmailMutation,
+} = userApiSlice;

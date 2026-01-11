@@ -12,6 +12,7 @@ import {
   verifyOtpController,
   resetPasswordController,
   verifyRegisterOtpController,
+  updateEmailVerifyController,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
@@ -64,6 +65,7 @@ userRouter.post(
   protect,
   updateEmailController
 );
+userRouter.post("/verify-update-email", protect, updateEmailVerifyController);
 userRouter.post(
   "/updateName",
   updateNameValidation,

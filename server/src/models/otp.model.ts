@@ -1,42 +1,56 @@
-import mongoose, { Date, Schema } from "mongoose";
-import bcrypt from "bcryptjs";
+// models/otp.model.ts
+import mongoose, { Schema, Document } from "mongoose";
 
-import { Document } from "mongoose";
-
-interface IOtp extends Document {
+export interface IOtp extends Document {
   email: string;
   otp: string;
   token: string;
   count: number;
   errorCount: number;
-  createdAt: Date | string | number;
-  updatedAt: Date | string | number;
-  matchOtp(enterOtp: string): Promise<boolean>;
+  userId?: mongoose.Types.ObjectId;
+  purpose?: string; // Add this: 'registration', 'password-reset', 'email-update'
+  createdAt: Date;
+  updatedAt: Date;
 }
-const otpSchema = new Schema<IOtp>(
+
+const otpSchema: Schema = new Schema(
   {
-    email: { type: String, required: true },
-    otp: { type: String, required: true },
-    token: { type: String, required: true },
-    count: { type: Number, required: true, default: 0 },
-    errorCount: { type: Number, required: true, default: 0 },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+    otp: {
+      type: String,
+      required: true,
+    },
+    token: {
+      type: String,
+      required: true,
+    },
+    count: {
+      type: Number,
+      default: 1,
+    },
+    errorCount: {
+      type: Number,
+      default: 0,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
+    purpose: {
+      type: String,
+      enum: ["registration", "password-reset", "email-update"],
+      default: "registration",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// otpSchema.pre("save", async function (next) {
-//   if (!this.isModified("otp")) {
-//     next();
-//   }
-//   const salt = await bcrypt.genSalt(10);
-//   this.otp = await bcrypt.hash(this.otp, salt);
-
-//   next();
-// });
-
-// otpSchema.methods.matchOtp = async function (enterOtp: string) {
-//   return await bcrypt.compare(enterOtp, this.otp);
-// };
-export const Otp = mongoose.model("Otp", otpSchema);
+export const Otp = mongoose.model<IOtp>("Otp", otpSchema);

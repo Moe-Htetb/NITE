@@ -13,6 +13,7 @@ import { Otp } from "../models/otp.model";
 
 import { checkOtpLimit } from "../utils/checkOtpLimit";
 import moment from "moment";
+import mongoose from "mongoose";
 //@route POST | /api/v1/register
 // @desc Register new user
 // @access Public
@@ -379,22 +380,321 @@ export const getUserProfileController = asyncHandler(
 );
 
 //@route POST | /api/v1/updateEmail
-// @desc login user update email
+// @desc Send OTP to new email for verification
 // @access Private
 export const updateEmailController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { user } = req;
-    const { email } = req.body;
+    const { email: newEmail } = req.body;
 
-    const existUserEmail = await User.findOne({ email });
-    if (existUserEmail) {
-      throw new Error("This email is already owned by other");
+    // Check if user is authenticated
+    if (!user) {
+      res.status(401);
+      throw new Error("Not authenticated");
     }
-    await User.findByIdAndUpdate(user?._id, { email });
-    res.status(200).json({ message: "Email Updated Successfully" });
+
+    // Get current user info
+    const currentUser = await User.findById(user._id);
+    if (!currentUser) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    // Check if new email is same as current email
+    if (currentUser.email === newEmail) {
+      res.status(400);
+      throw new Error("New email cannot be same as current email");
+    }
+
+    // Check if new email already exists
+    const existingUserWithNewEmail = await User.findOne({ email: newEmail });
+    if (existingUserWithNewEmail) {
+      res.status(400);
+      throw new Error("This email is already registered");
+    }
+
+    // Generate OTP and token
+    const token = generateOneTimeToken();
+    const otp = generateOTP();
+    const hashOtp = await bcrypt.hash(otp, 10);
+
+    // Check existing OTP record for the new email
+    const existEmail = await Otp.findOne({ email: newEmail });
+
+    let otpData;
+    if (!existEmail) {
+      // Create new OTP record
+      otpData = {
+        email: newEmail,
+        otp: hashOtp,
+        token,
+        count: 1,
+        errorCount: 0,
+        userId: user._id, // Store current user ID for verification
+        purpose: "email-update", // Add purpose field for clarity
+      };
+      await Otp.create(otpData);
+    } else {
+      // Check if OTP was requested on the same day
+      const lastOtpRequest = new Date(
+        existEmail.updatedAt as unknown as string | number | Date
+      ).toLocaleDateString();
+      const currentDate = new Date().toLocaleDateString();
+      const isSameDate = lastOtpRequest === currentDate;
+
+      checkOtpLimit(isSameDate, existEmail?.errorCount, existEmail?.count);
+
+      // Update existing OTP record
+      const updateData = {
+        otp: hashOtp,
+        token,
+        count: isSameDate ? existEmail.count + 1 : 1,
+        errorCount: 0, // Reset error count
+        userId: user._id, // Update with current user ID
+        purpose: "email-update",
+      };
+      await Otp.findByIdAndUpdate(existEmail._id, updateData, {
+        new: true,
+      });
+    }
+
+    // Prepare verification URL (for email template)
+    const verificationUrl = `${process.env.CLIENT_URL}/verify-email-update`;
+    const emailBody = otpEmailTemplate(otp, verificationUrl);
+
+    try {
+      console.log(`📧 Sending email update OTP to: ${newEmail}`);
+
+      // Send OTP to new email
+      await sendEmail({
+        reciver_mail: newEmail,
+        subject: "Verify Your New Email - NITE.COM",
+        body: emailBody,
+      });
+
+      // For development, show OTP in console
+      if (process.env.NODE_ENV === "development") {
+        console.log(`🔄 DEV MODE: Email update OTP for ${newEmail}: ${otp}`);
+      }
+
+      // Also send notification to old email
+      const notificationBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Email Change Request</h2>
+          <p>Hello ${currentUser.name},</p>
+          <p>We've received a request to change your email address from <strong>${currentUser.email}</strong> to <strong>${newEmail}</strong>.</p>
+          <p>An OTP has been sent to the new email address for verification.</p>
+          <p>If you didn't request this change, please contact our support team immediately.</p>
+          <br/>
+          <p>Best regards,<br/>NITE Team</p>
+        </div>
+      `;
+
+      await sendEmail({
+        reciver_mail: currentUser.email,
+        subject: "Email Change Request Notification - NITE.COM",
+        body: notificationBody,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `OTP sent successfully to ${newEmail}`,
+        token,
+        email: newEmail,
+        // Include OTP in development mode for testing
+        ...(process.env.NODE_ENV === "development" && {
+          devOtp: otp,
+          devNote: "OTP shown only in development mode",
+        }),
+      });
+    } catch (error: any) {
+      console.error("❌ Email update OTP sending failed:", error.message);
+
+      // Clean up OTP record if email failed
+      if (otpData) {
+        await Otp.findByIdAndDelete(otpData.userId);
+      } else if (existEmail) {
+        await Otp.findByIdAndUpdate(existEmail._id, {
+          $inc: { count: -1 },
+        });
+      }
+
+      // For development, still return OTP even if email fails
+      if (process.env.NODE_ENV === "development") {
+        res.status(200).json({
+          success: false,
+          message: `Email sending failed, but here's your OTP for testing: ${otp}`,
+          token,
+          otp: otp,
+          email: newEmail,
+          error: error.message,
+          note: "Email service failed, but you can use this OTP for testing",
+        });
+      } else {
+        throw new Error("Failed to send verification email. Please try again.");
+      }
+    }
   }
 );
 
+//@route POST | /api/v1/verify-update-email
+// @desc Verify OTP for email update
+// @access Private
+export const updateEmailVerifyController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { user } = req;
+    const { email: newEmail, otp, token } = req.body;
+
+    // Check if user is authenticated
+    if (!user) {
+      res.status(401);
+      throw new Error("Not authenticated");
+    }
+
+    // Check if OTP record exists for the new email
+    const otpRow = await Otp.findOne({
+      email: newEmail,
+      purpose: "email-update",
+    });
+
+    if (!otpRow) {
+      res.status(400).json({
+        error: "OTP not found",
+        message: "Please request a new OTP",
+      });
+      return;
+    }
+
+    // Verify the user ID matches
+    if (otpRow.userId!.toString() !== user._id.toString()) {
+      res.status(403).json({
+        error: "Unauthorized",
+        message: "This OTP is not for your account",
+      });
+      return;
+    }
+
+    // Check if OTP is from same date
+    const isSameDate =
+      new Date(
+        otpRow.updatedAt as unknown as string | number | Date
+      ).toLocaleDateString() === new Date().toLocaleDateString();
+
+    // Check error count limit
+    if (otpRow.errorCount >= 5) {
+      res.status(403).json({
+        error: "Too many failed attempts",
+        message: "Please try again tomorrow",
+      });
+      return;
+    }
+
+    // Token verification
+    const isSameToken = otpRow.token === token;
+    if (!isSameToken) {
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: 5,
+        },
+        { new: true }
+      );
+      res.status(400).json({
+        error: "Invalid token",
+        message: "Token verification failed",
+      });
+      return;
+    }
+
+    // OTP expiration check (5 minutes)
+    const isOtpExpired =
+      moment().diff(
+        moment(otpRow.updatedAt as unknown as string | number | Date),
+        "minutes"
+      ) > 5;
+    if (isOtpExpired) {
+      res.status(403).json({
+        error: "OTP expired",
+        message: "OTP expired. Please request a new OTP",
+      });
+      return;
+    }
+
+    // OTP verification
+    const isMatchOtp = await bcrypt.compare(otp, otpRow.otp);
+    if (!isMatchOtp) {
+      const newErrorCount = isSameDate ? otpRow.errorCount + 1 : 1;
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: newErrorCount,
+        },
+        { new: true }
+      );
+
+      res.status(400).json({
+        error: "Invalid OTP",
+        message: "Please check your OTP and try again",
+      });
+      return;
+    }
+
+    // Get current user
+    const currentUser = await User.findById(user._id);
+    if (!currentUser) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    const oldEmail = currentUser.email;
+
+    // Update user email
+    currentUser.email = newEmail;
+    await currentUser.save();
+
+    // Delete OTP record after successful verification
+    await Otp.findByIdAndDelete(otpRow._id);
+
+    // Generate new login token (optional, since email is part of auth info)
+    const newLoginToken = generateToken(res, currentUser._id);
+
+    // Send success notification to new email
+    const successBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Email Update Successful</h2>
+        <p>Hello ${currentUser.name},</p>
+        <p>Your email address has been successfully updated.</p>
+        <p><strong>Old Email:</strong> ${oldEmail}</p>
+        <p><strong>New Email:</strong> ${newEmail}</p>
+        <p>All future communications will be sent to this new email address.</p>
+        <br/>
+        <p>If you didn't make this change, please contact our support team immediately.</p>
+        <br/>
+        <p>Best regards,<br/>NITE Team</p>
+      </div>
+    `;
+
+    await sendEmail({
+      reciver_mail: newEmail,
+      subject: "Email Update Successful - NITE.COM",
+      body: successBody,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Email updated successfully",
+      email: newEmail,
+      user: {
+        id: currentUser._id,
+        name: currentUser.name,
+        email: newEmail,
+        profile: currentUser.profile?.url || "",
+        role: currentUser.role,
+      },
+      token: newLoginToken,
+    });
+  }
+);
 //@route POST | /api/v1/updateName
 // @desc login user update name
 // @access Private

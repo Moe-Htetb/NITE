@@ -40,17 +40,14 @@ const UpdateNameForm = () => {
     console.log(data);
 
     try {
-      // Call API to update name
       const response = await updateName({ name: data.name }).unwrap();
       console.log(response);
 
-      // Update Redux state and localStorage with the new name
-      dispatch(updateAuthInfo({ name: data.name })); // Fixed: Pass object with name property
+      dispatch(updateAuthInfo({ name: data.name }));
 
       toast.success("Name updated successfully!");
       setIsSuccess(true);
 
-      // Optionally update the form with the new name from response
       if (response.name) {
         reset({ name: response.name });
       }
