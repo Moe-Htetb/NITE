@@ -1,7 +1,11 @@
 import UpdateEmailForm from "./UpdateEmailForm";
 
 const UpdateEmailSection = () => {
-  return <UpdateEmailForm />;
+  return (
+    <section className="flex justify-center items-center mt-auto">
+      <UpdateEmailForm />
+    </section>
+  );
 };
 
 export default UpdateEmailSection;

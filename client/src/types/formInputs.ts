@@ -1,6 +1,7 @@
 import type z from "zod";
 import type { otpSchema, registerSchema, signInSchema } from "../schema/auth";
 import type {
+  emailUpdateOtpSchema,
   emailUpdateSchema,
   nameUpdateSchema,
   verifyEmailSchema,
@@ -14,3 +15,4 @@ export type signInFormInputs = z.infer<typeof signInSchema>;
 export type NameUpdateFormData = z.infer<typeof nameUpdateSchema>;
 export type emailUpdateFormData = z.infer<typeof emailUpdateSchema>;
 export type verifyEmailFormData = z.infer<typeof verifyEmailSchema>;
+export type verifyEmailOtpFormData = z.infer<typeof emailUpdateOtpSchema>;

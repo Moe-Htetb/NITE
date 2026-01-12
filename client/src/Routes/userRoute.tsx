@@ -7,6 +7,9 @@ const UserProfilePage = lazy(
 const UpdateEmailPage = lazy(
   () => import("../features/user/pages/UpdateEmailPage")
 );
+const VerifyUpdateEmailPage = lazy(
+  () => import("../features/user/pages/VerifyUpdateEmailPage")
+);
 const UpdateNamePage = lazy(
   () => import("../features/user/pages/UpdateNamePage")
 );
@@ -26,6 +29,10 @@ const userRoute = [
   {
     path: "/profile/update-name",
     element: <UpdateNamePage />,
+  },
+  {
+    path: "/profile/verify-update-email",
+    element: <VerifyUpdateEmailPage />,
   },
   {
     path: "/profile/reset-password",

@@ -13,74 +13,55 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, ArrowLeft, CheckCircle, ShieldAlert } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAppSelector } from "@/types/useRedux";
-import { selectAuthInfo, updateAuthInfo } from "@/store/authSlice";
+import { selectAuthInfo } from "@/store/authSlice";
 import { useUpdateEmailMutation } from "@/store/rtk/userApi";
-import { useAppDispatch } from "@/types/product";
 
 import { emailUpdateSchema } from "@/schema/user";
 import type { emailUpdateFormData } from "@/types/formInputs";
+import { setCookie } from "react-use-cookie";
 
 const UpdateEmailForm = () => {
   const userInfo = useAppSelector(selectAuthInfo);
   const [isSuccess, setIsSuccess] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
+  const [newEmail, _] = useState("");
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
-    reset,
   } = useForm<emailUpdateFormData>({
     resolver: zodResolver(emailUpdateSchema),
     defaultValues: {
       email: userInfo?.email || "",
-      // confirmEmail: "",
     },
   });
 
   const [updateEmail, { isLoading: isUpdating }] = useUpdateEmailMutation();
-  const dispatch = useAppDispatch();
+
+  const navigate = useNavigate();
 
   const onSubmit = async (data: emailUpdateFormData) => {
     console.log("Email update data:", data);
-
     try {
-      // Call API to update email (only email field needed)
-      const response = await updateEmail({
+      const response = await updateEmail(data).unwrap();
+      console.log(response);
+      const emailData = {
         email: data.email,
-      }).unwrap();
+        token: response.token,
+      };
+      setCookie("updateEmailToken", JSON.stringify(emailData));
 
-      console.log("Email update response:", response);
-
-      // Update Redux state with new email
-      dispatch(updateAuthInfo({ email: data.email }));
-
-      toast.success(response.message || "Email updated successfully!");
-      setIsSuccess(true);
-
-      // Reset form with new email
-      reset({
-        email: data.email,
-        // confirmEmail: data.email,
-      });
-    } catch (error: any) {
-      console.error("Email update failed:", error);
-
-      // Handle specific error cases
-      if (error?.data?.requiresVerification) {
-        setRequiresVerification(true);
-        setNewEmail(data.email);
-        toast.info("Verification email sent. Please check your inbox.");
-      } else {
-        toast.error(
-          error?.data?.message || "Failed to update email. Please try again."
-        );
+      if (response.success) {
+        navigate("/profile/verify-update-email");
+        toast.success(response.message);
       }
+    } catch (error: any) {
+      toast.error(error.data.message);
     }
   };
 
