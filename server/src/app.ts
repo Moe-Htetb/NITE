@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { connectDb } from "./db/connectDb";
 import userRouter from "./routes/userRoute";
@@ -8,9 +8,9 @@ import { errorHandler } from "./middlewares/errorHandler";
 import productRouter from "./routes/productRoute";
 
 //app setup
-dotenv.config({
-  path: ".env",
-});
+// dotenv.config({
+//   path: ".env",
+// });
 const app = express();
 app.use(express.json());
 app.use(cookieParser());

@@ -181,8 +181,6 @@ export const resetPasswordValidator = [
     .isLength({ min: 6 })
     .withMessage("new_password must be at least 6 characters long")
     .custom((value) => {
-      //   console.log("Password validation:", value); // Debug log
-
       if (!/(?=.*[A-Z])/.test(value)) {
         throw new Error("Password must contain at least one uppercase letter");
       }
