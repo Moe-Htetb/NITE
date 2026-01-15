@@ -4,7 +4,7 @@ import { User } from "../models/user.model";
 import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import { deleteImage, uploadSingleImage } from "../cloud/cloudinary";
-import bcrypt, { truncates } from "bcryptjs";
+import bcrypt from "bcryptjs";
 import { otpEmailTemplate } from "../utils/emailTemplate";
 import { sendEmail } from "../utils/sentEmail";
 
@@ -13,7 +13,6 @@ import { Otp } from "../models/otp.model";
 
 import { checkOtpLimit } from "../utils/checkOtpLimit";
 import moment from "moment";
-import mongoose from "mongoose";
 //@route POST | /api/v1/register
 // @desc Register new user
 // @access Public
@@ -812,7 +811,6 @@ export const forgotPasswordController = asyncHandler(
         success: true,
         message: `Password reset OTP sent successfully to ${email}`,
         token,
-        // Include OTP in development mode for testing convenience
         ...(process.env.NODE_ENV === "development" && {
           devOtp: otp,
           devNote:

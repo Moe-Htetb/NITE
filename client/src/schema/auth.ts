@@ -50,3 +50,7 @@ export const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean().optional(),
 });
+
+export const emailSchema = z.object({
+  email: z.email("Please enter a valid email address"),
+});

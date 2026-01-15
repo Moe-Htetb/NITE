@@ -91,21 +91,18 @@ userRouter.post(
   "/forgot-password",
   forgotPasswordValidator,
   validateRequest,
-  protect,
   forgotPasswordController
 );
 userRouter.post(
   "/verify-otp",
   verifyOtpValidator,
   validateRequest,
-  protect,
   verifyOtpController
 );
 userRouter.post(
   "/reset-password",
   resetPasswordValidator,
   validateRequest,
-  protect,
   resetPasswordController
 );
 export default userRouter;

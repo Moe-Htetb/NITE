@@ -1,9 +1,9 @@
-import ForgotPasswordForm from "../components/ForgotPasswordForm";
+import ForgotPasswordSection from "../components/ForgotPasswordSection";
 
 const ForgotPasswordPage = () => {
   return (
     <>
-      <ForgotPasswordForm />
+      <ForgotPasswordSection />
     </>
   );
 };

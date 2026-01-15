@@ -8,6 +8,9 @@ const ForgotPasswordPage = lazy(
 const VerifyOtpPage = lazy(
   () => import("../features/auth/pages/VerifyOtpPage")
 );
+const ResetPasswordPage = lazy(
+  () => import("../features/auth/pages/ResetPasswordPage")
+);
 
 const authRoute = [
   {
@@ -25,6 +28,10 @@ const authRoute = [
   {
     path: "/verify-otp",
     element: <VerifyOtpPage />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
   },
 ];
 export default authRoute;
