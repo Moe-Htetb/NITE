@@ -4,6 +4,7 @@ import type {
   emailUpdateOtpSchema,
   emailUpdateSchema,
   nameUpdateSchema,
+  passwordSchema,
   verifyEmailSchema,
 } from "@/schema/user";
 
@@ -16,3 +17,4 @@ export type NameUpdateFormData = z.infer<typeof nameUpdateSchema>;
 export type emailUpdateFormData = z.infer<typeof emailUpdateSchema>;
 export type verifyEmailFormData = z.infer<typeof verifyEmailSchema>;
 export type verifyEmailOtpFormData = z.infer<typeof emailUpdateOtpSchema>;
+export type PasswordFormValues = z.infer<typeof passwordSchema>;

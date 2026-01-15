@@ -333,7 +333,7 @@ const UserProfileForm = () => {
                 Last changed 30 days ago {/* Replace with actual data */}
               </p>
             </div>
-            <Link to="/profile/reset-password">
+            <Link to="/profile/update-password">
               <Button className="bg-black text-white hover:bg-gray-800">
                 Reset Password
               </Button>

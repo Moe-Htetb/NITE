@@ -13,8 +13,8 @@ const VerifyUpdateEmailPage = lazy(
 const UpdateNamePage = lazy(
   () => import("../features/user/pages/UpdateNamePage")
 );
-const ResetPasswordPage = lazy(
-  () => import("../features/user/pages/ResetPasswordPage")
+const UpdatePasswordPage = lazy(
+  () => import("../features/user/pages/UpdatePasswordPage")
 );
 
 const userRoute = [
@@ -35,8 +35,8 @@ const userRoute = [
     element: <VerifyUpdateEmailPage />,
   },
   {
-    path: "/profile/reset-password",
-    element: <ResetPasswordPage />,
+    path: "/profile/update-password",
+    element: <UpdatePasswordPage />,
   },
 ];
 

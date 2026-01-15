@@ -53,6 +53,14 @@ export interface VerifyUpdateEmailResponse {
   // token?: string;
 }
 
+export interface UpdatePasswordRequest {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+export interface UpdatePasswordResponse {
+  message: string;
+}
 export const userApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     updateUserProfile: builder.mutation<
@@ -96,6 +104,16 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["user"],
     }),
+    updatePassword: builder.mutation<
+      UpdatePasswordResponse,
+      UpdatePasswordRequest
+    >({
+      query: (data) => ({
+        url: "/updatePassword",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -104,4 +122,5 @@ export const {
   useUpdateUserNameMutation,
   useUpdateEmailMutation,
   useVerifyUpdateEmailMutation,
+  useUpdatePasswordMutation,
 } = userApiSlice;
