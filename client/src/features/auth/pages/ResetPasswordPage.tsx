@@ -1,5 +1,7 @@
+import ResetPasswordSection from "../components/ResetPasswordSection";
+
 const ResetPasswordPage = () => {
-  return <div>ResetPasswordPage</div>;
+  return <ResetPasswordSection />;
 };
 
 export default ResetPasswordPage;

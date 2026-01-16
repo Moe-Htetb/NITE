@@ -3,6 +3,7 @@ import type {
   emailSchema,
   otpSchema,
   registerSchema,
+  resetPasswordSchema,
   signInSchema,
 } from "../schema/auth";
 import type {
@@ -25,3 +26,4 @@ export type verifyEmailOtpFormData = z.infer<typeof emailUpdateOtpSchema>;
 export type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export type ForgotPasswordFormValues = z.infer<typeof emailSchema>;
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;

@@ -71,7 +71,7 @@ export interface verifyForgotPasswordOtpResponse {
 export interface ResetPasswordRequest {
   email: string;
   token?: string;
-  password: string;
+  new_password: string;
   confirm_password: string;
 }
 export interface ResetPasswordResponse {
