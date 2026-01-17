@@ -4,6 +4,7 @@ import MainLayout from "../Layout/MainLayout";
 import publicRoute from "./publicRoute";
 import authRoute from "./authRoute";
 import userRoute from "./userRoute";
+import adminRoute from "./adminRoute";
 
 const router = createBrowserRouter([
   {
@@ -12,7 +13,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [...publicRoute, ...userRoute],
   },
-  ...authRoute,
+  ...authRoute , ...adminRoute
 ]);
 
 export default router;
