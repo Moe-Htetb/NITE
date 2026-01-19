@@ -13,7 +13,8 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [...publicRoute, ...userRoute],
   },
-  ...authRoute , ...adminRoute
+  ...adminRoute, // Move adminRoute to root level
+  ...authRoute,
 ]);
 
 export default router;

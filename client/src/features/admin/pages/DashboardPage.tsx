@@ -1,12 +1,7 @@
 import DashboardSection from "../components/DashboardSection";
-import AdminLayout from "../components/AdminLayout";
 
 const DashboardPage = () => {
-  return (
-    <AdminLayout>
-      <DashboardSection />
-    </AdminLayout>
-  );
+  return <DashboardSection />;
 };
 
 export default DashboardPage;

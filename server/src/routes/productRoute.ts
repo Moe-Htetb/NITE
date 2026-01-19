@@ -28,8 +28,8 @@ productRouter.post(
   isAdmin,
   // createProductValidator,
   // validateRequest,
-  upload.array("images"),
-  createProductController
+  upload.array("images", 10),
+  createProductController,
 );
 
 // Get all products (with filters)
@@ -52,7 +52,7 @@ productRouter.put(
   // validateRequest,
   upload.array("images"),
 
-  updateProductController
+  updateProductController,
 );
 productRouter.delete(
   "/product/delete/:id",
@@ -60,7 +60,7 @@ productRouter.delete(
   isAdmin,
   deleteProductValidator,
   validateRequest,
-  deleteProductController
+  deleteProductController,
 );
 
 export default productRouter;

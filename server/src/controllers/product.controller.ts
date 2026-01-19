@@ -8,68 +8,132 @@ import { deleteImage, uploadSingleImage } from "../cloud/cloudinary";
 //@route POST | /api/v1/product/create
 // @desc create product
 // @access admin
+
 export const createProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const { name, description, category } = req.body;
+    try {
+      // Log what's coming in FormData
+      console.log("FormData body:", req.body);
+      console.log("Files:", req.files);
 
-    const sizes = Array.isArray(req.body.sizes)
-      ? req.body.sizes
-      : [req.body.sizes];
-    const colors = Array.isArray(req.body.colors)
-      ? req.body.colors
-      : [req.body.colors];
+      const {
+        name,
+        description,
+        category,
+        price,
+        instock_count,
+        rating_count,
+        is_feature,
+        is_new_arrival,
+        sizes: sizesInput,
+        colors: colorsInput,
+      } = req.body;
 
-    const price = Number(req.body.price);
-    const instock_count = Number(req.body.instock_count);
-    const rating_count = Number(req.body.rating_count);
+      // Validate required fields
+      if (!name || !description || !category || !price) {
+        throw new Error("Required fields: name, description, category, price");
+      }
 
-    const is_feature = req.body.is_feature === "true";
-    const is_new_arrival = req.body.is_new_arrival === "true";
+      // Parse arrays from FormData strings
+      let sizesArray: string[] = [];
+      if (sizesInput) {
+        try {
+          sizesArray =
+            typeof sizesInput === "string"
+              ? JSON.parse(sizesInput)
+              : Array.isArray(sizesInput)
+                ? sizesInput
+                : [sizesInput];
+        } catch (e) {
+          sizesArray = [sizesInput as string];
+        }
+      }
 
-    const existingProduct = await Product.findOne({
-      category,
-    });
+      let colorsArray: string[] = [];
+      if (colorsInput) {
+        try {
+          colorsArray =
+            typeof colorsInput === "string"
+              ? JSON.parse(colorsInput)
+              : Array.isArray(colorsInput)
+                ? colorsInput
+                : [colorsInput];
+        } catch (e) {
+          colorsArray = [colorsInput as string];
+        }
+      }
 
-    if (existingProduct) {
-      throw new Error("Category with this name already exists ");
-    }
-    const images = req.files as Express.Multer.File[];
-    const uploadedImages = await Promise.all(
-      images.map(async (image) => {
-        const uploadImg = await uploadSingleImage(
-          `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
-          "NITE/products"
-        );
-        return {
-          url: uploadImg.url,
-          public_alt: uploadImg.public_alt,
-        };
-      })
-    );
+      // Convert string numbers to actual numbers
+      const priceNum = parseFloat(price);
+      const instockCountNum = instock_count ? parseInt(instock_count, 10) : 0;
+      const ratingCountNum = rating_count ? parseFloat(rating_count) : 0;
 
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      instock_count,
-      category,
-      sizes,
-      colors,
-      images: uploadedImages,
-      is_new_arrival,
-      is_feature,
-      rating_count,
-      userId: req.user?._id,
-    });
-    if (!product) throw new Error("Product not created");
+      // Validate numbers
+      if (isNaN(priceNum)) {
+        throw new Error("Price must be a valid number");
+      }
 
-    if (product) {
+      // Parse booleans from FormData strings
+      const isFeature =
+        is_feature === "true" || is_feature === true || is_feature === "1";
+      const isNewArrival =
+        is_new_arrival === "true" ||
+        is_new_arrival === true ||
+        is_new_arrival === "1";
+
+      // Check if product with same name already exists
+      const existingProduct = await Product.findOne({ name });
+
+      if (existingProduct) {
+        throw new Error("Product with this name already exists");
+      }
+
+      // Handle image uploads from FormData
+      const images = req.files as Express.Multer.File[];
+
+      if (!images || images.length === 0) {
+        throw new Error("At least one image is required");
+      }
+
+      const uploadedImages = await Promise.all(
+        images.map(async (image) => {
+          // Convert buffer to base64 string properly for Cloudinary
+          const base64Image = image.buffer.toString("base64");
+          const dataUri = `data:${image.mimetype};base64,${base64Image}`;
+
+          const uploadImg = await uploadSingleImage(dataUri, "NITE/products");
+          return {
+            url: uploadImg.url,
+            public_alt: uploadImg.public_alt,
+          };
+        }),
+      );
+
+      const product = await Product.create({
+        name: name.trim(),
+        description: description.trim(),
+        category: category.trim(),
+        price: priceNum,
+        instock_count: instockCountNum,
+        sizes: sizesArray,
+        colors: colorsArray,
+        images: uploadedImages,
+        is_new_arrival: isNewArrival,
+        is_feature: isFeature,
+        rating_count: ratingCountNum,
+        userId: req.user?._id,
+      });
+
       res.status(201).json({
+        success: true,
         message: `${product.name} created successfully`,
         product,
       });
+    } catch (error: any) {
+      console.error("Create product error:", error);
+      next(error);
     }
-  }
+  },
 );
 
 //@route POST | /api/v1/products
@@ -79,7 +143,7 @@ export const getAllProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const products = await Product.find({});
     res.status(200).json({ products });
-  }
+  },
 );
 
 //@route POST | /api/v1/product/:id
@@ -90,7 +154,7 @@ export const getSingleProductController = asyncHandler(
     const { id } = req.params;
     const product = await Product.findById(id);
     res.status(200).json({ product });
-  }
+  },
 );
 
 //@route POST | /api/v1/product/update/:id
@@ -137,7 +201,7 @@ export const updateProductController = asyncHandler(
     // find images to delete from cloud
     const imagesToDelete = existingProduct.images.filter((existingImg) => {
       return !keepExistingImages.some(
-        (keepImg: any) => keepImg.public_alt === existingImg.public_alt
+        (keepImg: any) => keepImg.public_alt === existingImg.public_alt,
       );
     });
 
@@ -151,7 +215,7 @@ export const updateProductController = asyncHandler(
               console.log(`Failed to delete image ${img.public_alt}`, err);
             }
           }
-        })
+        }),
       );
     }
 
@@ -162,13 +226,13 @@ export const updateProductController = asyncHandler(
         newImages.map(async (image) => {
           const uploadImg = await uploadSingleImage(
             `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
-            "fash.com/products"
+            "fash.com/products",
           );
           return {
             url: uploadImg.url,
             public_alt: uploadImg.public_alt,
           };
-        })
+        }),
       );
     }
 
@@ -191,7 +255,7 @@ export const updateProductController = asyncHandler(
     const updatedProduct = await existingProduct.save();
 
     res.status(200).json(updatedProduct);
-  }
+  },
 );
 
 //@route POST | /api/v1/product/delete/:id
@@ -210,7 +274,7 @@ export const deleteProductController = asyncHandler(
 
     await existingProduct.deleteOne();
     res.status(404).json({ message: "Product destory!" });
-  }
+  },
 );
 
 // @route GET | api/products/feature
@@ -222,7 +286,7 @@ export const getFeaturedProductController = asyncHandler(
       createdAt: -1,
     });
     res.status(200).json({ product });
-  }
+  },
 );
 
 // @route GET | api/products/new
@@ -232,7 +296,7 @@ export const getNewProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const product = await Product.find({ is_new_arrival: true });
     res.status(200).json({ product });
-  }
+  },
 );
 // @route GET | api/products/keyword={name}
 // @desc Get all filter products.
@@ -351,31 +415,31 @@ export const getProductsWithFilter = asyncHandler(
         ? `${baseUrl}?${buildQueryParams(pageNum + 1)}`
         : null;
 
-    // // Build meta links for pagination
-    // const metaLinks = [];
+    // Build meta links for pagination
+    const metaLinks = [];
 
-    // // Previous link
-    // metaLinks.push({
-    //   url: prevPageUrl,
-    //   label: "&laquo; Previous",
-    //   active: false
-    // });
+    // Previous link
+    metaLinks.push({
+      url: prevPageUrl,
+      label: "&laquo; Previous",
+      active: false,
+    });
 
-    // // Page number links
-    // for (let i = 1; i <= totalPages; i++) {
-    //   metaLinks.push({
-    //     url: `${baseUrl}?${buildQueryParams(i)}`,
-    //     label: i.toString(),
-    //     active: i === pageNum
-    //   });
-    // }
+    // Page number links
+    for (let i = 1; i <= totalPages; i++) {
+      metaLinks.push({
+        url: `${baseUrl}?${buildQueryParams(i)}`,
+        label: i.toString(),
+        active: i === pageNum,
+      });
+    }
 
-    // // Next link
-    // metaLinks.push({
-    //   url: nextPageUrl,
-    //   label: "Next &raquo;",
-    //   active: false
-    // });
+    // Next link
+    metaLinks.push({
+      url: nextPageUrl,
+      label: "Next &raquo;",
+      active: false,
+    });
 
     // Calculate from and to
     const from = totalProducts > 0 ? (pageNum - 1) * limitNum + 1 : null;
@@ -395,18 +459,18 @@ export const getProductsWithFilter = asyncHandler(
         from,
         to,
       },
-      // meta: {
-      //   current_page: pageNum,
-      //   from: from,
-      //   last_page: totalPages,
-      //   links: metaLinks,
-      //   path: baseUrl,
-      //   per_page: limitNum,
-      //   to: to,
-      //   total: totalProducts
-      // }
+      meta: {
+        current_page: pageNum,
+        from: from,
+        last_page: totalPages,
+        links: metaLinks,
+        path: baseUrl,
+        per_page: limitNum,
+        to: to,
+        total: totalProducts,
+      },
     });
-  }
+  },
 );
 
 // @route GET | api/products/meta
@@ -435,5 +499,5 @@ export const getMetaProductController = asyncHandler(
       minPrice: priceRange[0]?.minPrice || 0,
       maxPrice: priceRange[0]?.maxPrice || 0,
     });
-  }
+  },
 );

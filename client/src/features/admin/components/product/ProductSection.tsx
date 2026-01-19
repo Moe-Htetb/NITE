@@ -1,373 +1,418 @@
-import { useState } from "react";
-import { Link } from "react-router";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import {
   Package,
   Plus,
   Search,
-  Eye,
-  Edit,
-  Trash2,
   ChevronLeft,
   ChevronRight,
-  Home,
+  Loader2,
+  X,
 } from "lucide-react";
+import BreadCrumb from "@/components/BreadCrumb";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { useGetProductsQuery } from "@/store/rtk/productApi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { debounce } from "lodash";
+
+import ProductRow from "./ProductRow";
 
 const ProductSection = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Mock data - replace with actual API data later
-  const products = [
-    {
-      id: "1",
-      name: "Product Name 1",
-      category: "Category 1",
-      price: 99.99,
-      stock: 10,
-      status: "active",
-      isFeatured: true,
-      isNewArrival: false,
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Product Name 2",
-      category: "Category 2",
-      price: 149.99,
-      stock: 5,
-      status: "active",
-      isFeatured: false,
-      isNewArrival: true,
-      createdAt: "2024-01-20",
-    },
-    {
-      id: "3",
-      name: "Product Name 3",
-      category: "Category 1",
-      price: 79.99,
-      stock: 0,
-      status: "out_of_stock",
-      isFeatured: false,
-      isNewArrival: false,
-      createdAt: "2024-01-10",
-    },
-  ];
+  const searchParams = new URLSearchParams(location.search);
 
-  const totalProducts = products.length;
-  const totalPages = Math.ceil(totalProducts / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentProducts = products.slice(startIndex, endIndex);
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || "",
+  );
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
+  const [currentPage, setCurrentPage] = useState(
+    Number(searchParams.get("page")) || 1,
+  );
+  const [itemsPerPage, setItemsPerPage] = useState(
+    Number(searchParams.get("limit")) || 10,
+  );
+  const [sortBy, setSortBy] = useState(
+    searchParams.get("sort_by") || "createdAt",
+  );
+  const [sortDirection, setSortDirection] = useState(
+    searchParams.get("sort_direction") || "desc",
+  );
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (searchQuery) params.set("search", searchQuery);
+    if (currentPage > 1) params.set("page", currentPage.toString());
+    if (itemsPerPage !== 10) params.set("limit", itemsPerPage.toString());
+    if (sortBy !== "createdAt") params.set("sort_by", sortBy);
+    if (sortDirection !== "desc") params.set("sort_direction", sortDirection);
+
+    const newSearch = params.toString();
+    const currentSearch = location.search.substring(1);
+
+    if (newSearch !== currentSearch) {
+      navigate(`?${newSearch}`, { replace: true });
+    }
+  }, [
+    searchQuery,
+    currentPage,
+    itemsPerPage,
+    sortBy,
+    sortDirection,
+    navigate,
+    location.search,
+  ]);
+
+  const debouncedSearch = debounce((value: string) => {
+    if (value !== searchQuery) {
+      setSearchQuery(value);
+      setCurrentPage(1);
+    }
+  }, 3000);
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedSearch(value);
   };
+
+  // Clear search function
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setCurrentPage(1);
+    debouncedSearch.cancel(); // Cancel any pending debounce
+  };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, []);
+
+  // RTK Query hooks
+  const {
+    data: productsData,
+    isLoading,
+    isFetching,
+    error,
+  } = useGetProductsQuery({
+    keyword: searchQuery,
+    page: currentPage,
+    limit: itemsPerPage,
+    sort_by: sortBy,
+    sort_direction: sortDirection,
+  });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setItemsPerPage(Number(e.target.value));
+  const handleItemsPerPageChange = (value: string) => {
+    const newLimit = parseInt(value, 10);
+    setItemsPerPage(newLimit);
     setCurrentPage(1);
   };
 
+  const handleSortChange = (value: string) => {
+    const [newSortBy, newSortDirection] = value.split("_");
+    setSortBy(newSortBy);
+    setSortDirection(newSortDirection);
+  };
+
+  // Table Skeleton Loader
+  const TableSkeleton = () => (
+    <div className="space-y-4">
+      {[...Array(5)].map((_, index) => (
+        <div key={index} className="flex items-center space-x-4 p-4 border-b">
+          <Skeleton className="h-10 w-10 rounded-md" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-8 w-24" />
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="bg-white p-6 space-y-6">
-      {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/dashboard" className="flex items-center text-gray-600 hover:text-black">
-                <Home className="h-4 w-4 mr-1" />
-                Dashboard
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage className="text-black">Products</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadCrumb currentPageTitle="Products" />
 
-      {/* Header with Search and Add Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-black">Products</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your product inventory
-          </p>
+          <p className="text-gray-600 mt-1">Manage your product inventory</p>
         </div>
-      
       </div>
 
-      {/* Search Bar */}
-     
-        <div className="flex justify-between items-center">
-        <div className="relative w-[350px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search products by name, category..."
-              value={searchQuery}
-              onChange={handleSearch}
-              className="pl-10 border-gray-300 focus:border-black focus:ring-black"
-            />
-          </div>
-          <Link to="/admin/products/add">
-          <Button className="bg-black text-white hover:bg-gray-800 w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
-        </Link>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="relative w-full sm:w-96">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search products by name, category..."
+            value={searchInput}
+            onChange={handleSearchInputChange}
+            className="pl-10 pr-10 border-gray-300 focus:border-black focus:ring-black"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
-     
 
-      {/* Products Table */}
+        <div className="flex items-center gap-4 w-full sm:w-auto">
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Sort by:</span>
+            <Select
+              value={`${sortBy}_${sortDirection}`}
+              onValueChange={handleSortChange}
+            >
+              <SelectTrigger className="w-45 border-gray-300 focus:border-black focus:ring-black">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt_desc">Newest First</SelectItem>
+                <SelectItem value="createdAt_asc">Oldest First</SelectItem>
+                <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                <SelectItem value="name_asc">Name: A to Z</SelectItem>
+                <SelectItem value="name_desc">Name: Z to A</SelectItem>
+                <SelectItem value="rating_desc">Highest Rated</SelectItem>
+                <SelectItem value="rating_asc">Lowest Rated</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Link to="/dashboard/products/add-product">
+            <Button className="bg-black text-white hover:bg-gray-800">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-bold text-black">
             All Products
+            {isFetching && !isLoading && (
+              <Loader2 className="inline-block ml-2 h-4 w-4 animate-spin" />
+            )}
           </CardTitle>
+          {productsData && (
+            <div className="text-sm text-gray-600">
+              Showing {productsData.meta.from || 0} to{" "}
+              {productsData.meta.to || 0} of {productsData.meta.total} products
+            </div>
+          )}
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                    Product
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                    Category
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                    Price
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                    Stock
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-black">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center">
-                      <div className="flex flex-col items-center space-y-3">
-                        <Package className="h-12 w-12 text-gray-400" />
-                        <p className="text-gray-600">
-                          {searchQuery
-                            ? "No products found matching your search"
-                            : "No products found"}
-                        </p>
-                        {!searchQuery && (
-                          <Link to="/admin/products/add">
-                            <Button
-                              variant="outline"
-                              className="border-gray-300 text-black hover:bg-gray-100"
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add Your First Product
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  currentProducts.map((product) => (
-                    <tr
-                      key={product.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center shrink-0">
-                            <Package className="h-5 w-5 text-gray-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-black">
-                              {product.name}
-                            </p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              {product.isFeatured && (
-                                <Badge className="bg-black text-white text-xs">
-                                  Featured
-                                </Badge>
-                              )}
-                              {product.isNewArrival && (
-                                <Badge
-                                  variant="outline"
-                                  className="border-gray-300 text-gray-700 text-xs"
-                                >
-                                  New
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-sm text-gray-600">
-                        {product.category}
-                      </td>
-                      <td className="py-4 px-4 text-sm font-semibold text-black">
-                        ${product.price.toFixed(2)}
-                      </td>
-                      <td className="py-4 px-4 text-sm text-gray-600">
-                        {product.stock}
-                      </td>
-                      <td className="py-4 px-4">
-                        <Badge
-                          className={
-                            product.status === "active"
-                              ? "bg-green-100 text-green-800 border-green-200"
-                              : "bg-red-100 text-red-800 border-red-200"
-                          }
-                        >
-                          {product.status === "active"
-                            ? "In Stock"
-                            : "Out of Stock"}
-                        </Badge>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:bg-gray-100"
-                          >
-                            <Eye className="h-4 w-4 text-gray-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:bg-gray-100"
-                          >
-                            <Edit className="h-4 w-4 text-gray-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-gray-200">
-            {/* Left: Row per page selection */}
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span>Show</span>
-              <select
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-                className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black bg-white"
+          {isLoading ? (
+            <TableSkeleton />
+          ) : error ? (
+            <div className="py-12 text-center">
+              <div className="text-red-600 mb-2">⚠️</div>
+              <p className="text-gray-600">
+                Error loading products. Please try again.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="mt-4 border-gray-300 text-black hover:bg-gray-100"
               >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span>entries</span>
+                Retry
+              </Button>
             </div>
-
-            {/* Right: Pagination controls */}
-            {totalPages > 0 && (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((page) => {
-                      // Show first page, last page, current page, and pages around current
-                      return (
-                        page === 1 ||
-                        page === totalPages ||
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      );
-                    })
-                    .map((page, index, array) => {
-                      // Add ellipsis if there's a gap
-                      const showEllipsisBefore = index > 0 && array[index - 1] !== page - 1;
-                      return (
-                        <div key={page} className="flex items-center">
-                          {showEllipsisBefore && (
-                            <span className="px-2 text-gray-400">...</span>
-                          )}
-                          <Button
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                            className={
-                              currentPage === page
-                                ? "bg-black text-white hover:bg-gray-800"
-                                : "border-gray-300 text-black hover:bg-gray-100"
-                            }
-                          >
-                            {page}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+          ) : productsData?.data.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="flex flex-col items-center space-y-3">
+                <Package className="h-12 w-12 text-gray-400" />
+                <p className="text-gray-600">
+                  {searchQuery
+                    ? "No products found matching your search"
+                    : "No products found"}
+                </p>
+                {!searchQuery && (
+                  <Link to="/dashboard/products/add-product">
+                    <Button
+                      variant="outline"
+                      className="border-gray-300 text-black hover:bg-gray-100"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Product
+                    </Button>
+                  </Link>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Product
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Category
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Price
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Stock
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-black">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productsData?.data.map((product) => (
+                      <ProductRow key={product._id} product={product} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {productsData && productsData.meta.total > 0 && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>Show</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => handleItemsPerPageChange(e.target.value)}
+                      className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black bg-white"
+                      disabled={isFetching}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <span>entries</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={
+                        !productsData.links.prev ||
+                        currentPage === 1 ||
+                        isFetching
+                      }
+                      className="border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+
+                    <div className="flex items-center space-x-1">
+                      {productsData.meta.links
+                        .filter((link) => {
+                          if (
+                            link.label.includes("Previous") ||
+                            link.label.includes("Next")
+                          ) {
+                            return false;
+                          }
+                          const pageNum = parseInt(link.label);
+                          if (isNaN(pageNum)) return false;
+                          return (
+                            pageNum === 1 ||
+                            pageNum === productsData.meta.last_page ||
+                            Math.abs(pageNum - currentPage) <= 1
+                          );
+                        })
+                        .map((link, index, array) => {
+                          const pageNum = parseInt(link.label);
+                          const showEllipsisBefore =
+                            index > 0 &&
+                            array[index - 1].label !== "..." &&
+                            parseInt(array[index - 1].label) !== pageNum - 1;
+
+                          return (
+                            <div key={link.label} className="flex items-center">
+                              {showEllipsisBefore && (
+                                <span className="px-2 text-gray-400">...</span>
+                              )}
+                              <Button
+                                variant={link.active ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(pageNum)}
+                                disabled={!link.url || isFetching}
+                                className={
+                                  link.active
+                                    ? "bg-black text-white hover:bg-gray-800"
+                                    : "border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                }
+                              >
+                                {link.label}
+                              </Button>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={
+                        !productsData.links.next ||
+                        currentPage === productsData.meta.last_page ||
+                        isFetching
+                      }
+                      className="border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

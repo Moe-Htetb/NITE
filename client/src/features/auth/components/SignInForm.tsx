@@ -20,7 +20,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useLoginMutation } from "@/store/rtk/authApi";
 import { toast } from "sonner";
 // import { setCookie } from "react-use-cookie";
-import { useAppDispatch, useAppSelector } from "@/types/product";
+import { useAppDispatch, useAppSelector } from "@/types/useRedux";
 import { selectAuthInfo, setAuthInfo } from "@/store/authSlice";
 
 const SignInForm = () => {
@@ -67,7 +67,7 @@ const SignInForm = () => {
       }
     } catch (error: any) {
       toast.error(
-        error.data?.message || "Login failed. Please check your credentials."
+        error.data?.message || "Login failed. Please check your credentials.",
       );
     }
   };

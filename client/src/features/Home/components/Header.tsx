@@ -1,7 +1,7 @@
 // Header.tsx
 // import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useAppDispatch, useAppSelector } from "@/types/product";
+import { useAppDispatch, useAppSelector } from "@/types/useRedux";
 import { clearAuthInfo, selectAuthInfo } from "@/store/authSlice";
 import {
   DropdownMenu,
@@ -323,7 +323,7 @@ const Header = () => {
                               >
                                 <a href="#">{item}</a>
                               </Button>
-                            ))
+                            )),
                           )}
                         </div>
                       </AccordionContent>

@@ -1,21 +1,37 @@
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import AdminSidebar from "./AdminSidebar";
+// import { useEffect } from "react";
+// import { getCookie } from "react-use-cookie";
+import {
+  Outlet,
+  // useNavigate
+} from "react-router";
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
+const AdminLayout = () => {
+  // const navigate = useNavigate();
 
-const AdminLayout = ({ children }: AdminLayoutProps) => {
+  // useEffect(() => {
+  //   const token = getCookie("token");
+  //   console.log(token);
+  //   if (!token) {
+  //     navigate("/login");
+  //   }
+  // }, [navigate]); // Added navigate as dependency
+
   return (
     <SidebarProvider>
       <AdminSidebar />
       <SidebarInset className="bg-white">
-        <header className="flex h-[77px] shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-4">
+        <header className="flex py-5 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-4">
           <SidebarTrigger className="text-gray-700 hover:bg-gray-100" />
           <div className="flex-1" />
         </header>
         <div className="flex flex-1 flex-col overflow-auto">
-          {children}
+          <Outlet />
         </div>
       </SidebarInset>
     </SidebarProvider>
