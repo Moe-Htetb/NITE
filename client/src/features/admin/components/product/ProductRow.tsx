@@ -36,8 +36,8 @@ const ProductRow = ({ product }: ProductRowProps) => {
     if (!productToDelete) return;
 
     try {
-      await deleteProduct(productToDelete._id).unwrap();
-      toast.success("Product deleted successfully");
+      const response = await deleteProduct(productToDelete._id).unwrap();
+      toast.success(response.message);
       // Success - dialog will close automatically
     } catch (err: any) {
       console.error("Failed to delete product:", err);
@@ -55,7 +55,6 @@ const ProductRow = ({ product }: ProductRowProps) => {
     setProductToDelete(null);
   };
 
-  // Get the first image from the images array
   const productImage =
     product.images && product.images.length > 0 ? product.images[0].url : null;
 

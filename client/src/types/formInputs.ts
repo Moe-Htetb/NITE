@@ -13,6 +13,7 @@ import type {
   passwordSchema,
   verifyEmailSchema,
 } from "@/schema/user";
+import type { productFormSchema } from "@/schema/product";
 
 export type registerFormInputs = z.infer<typeof registerSchema>;
 
@@ -27,3 +28,4 @@ export type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export type ForgotPasswordFormValues = z.infer<typeof emailSchema>;
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+export type ProductFormValues = z.input<typeof productFormSchema>;

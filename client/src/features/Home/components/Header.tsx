@@ -46,15 +46,54 @@ import {
   Settings,
   LogOut,
   Home,
+  Shield,
 } from "lucide-react";
 import { useLogoutMutation } from "@/store/rtk/authApi";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const Header = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [userMenu, setUserMenu] = useState([
+    { name: "My Profile", icon: User, onClick: () => navigate("/profile") },
+    { name: "Orders", icon: Package, onClick: () => navigate("/orders") },
+    { name: "Wishlist", icon: Heart, onClick: () => navigate("/wishlist") },
+    { name: "Settings", icon: Settings, onClick: () => navigate("/settings") },
+  ]);
 
   const authInfo = useAppSelector(selectAuthInfo);
+
+  useEffect(() => {
+    if (authInfo?.role === "admin") {
+      setUserMenu([
+        {
+          name: "Admin Dashboard",
+          icon: Shield,
+          onClick: () => navigate("/dashboard"),
+        },
+        { name: "My Profile", icon: User, onClick: () => navigate("/profile") },
+        { name: "Orders", icon: Package, onClick: () => navigate("/orders") },
+        { name: "Wishlist", icon: Heart, onClick: () => navigate("/wishlist") },
+        {
+          name: "Settings",
+          icon: Settings,
+          onClick: () => navigate("/settings"),
+        },
+      ]);
+    } else {
+      setUserMenu([
+        { name: "My Profile", icon: User, onClick: () => navigate("/profile") },
+        { name: "Orders", icon: Package, onClick: () => navigate("/orders") },
+        { name: "Wishlist", icon: Heart, onClick: () => navigate("/wishlist") },
+        {
+          name: "Settings",
+          icon: Settings,
+          onClick: () => navigate("/settings"),
+        },
+      ]);
+    }
+  }, [authInfo?.role, navigate]);
 
   const [
     logout,
@@ -85,13 +124,6 @@ const Header = () => {
       name: "Accessories",
       items: ["Headlamps", "Water Bottles", "Multi-tools", "First Aid"],
     },
-  ];
-
-  const userMenu = [
-    { name: "My Profile", icon: User, onClick: () => navigate("/profile") },
-    { name: "Orders", icon: Package, onClick: () => navigate("/orders") },
-    { name: "Wishlist", icon: Heart, onClick: () => navigate("/wishlist") },
-    { name: "Settings", icon: Settings, onClick: () => navigate("/settings") },
   ];
 
   const handleSignOut = async () => {

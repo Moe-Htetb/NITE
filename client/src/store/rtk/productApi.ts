@@ -1,8 +1,22 @@
-import type { ProductsFilterParams, ProductsResponse } from "@/types/product";
+import type {
+  CreateProductResponse,
+  DeleteProductResponse,
+  ProductByIdResponse,
+  ProductsFilterParams,
+  ProductsResponse,
+} from "@/types/product";
 import { apiSlice } from "./rtk";
 
 export const productApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    createProduct: builder.mutation<CreateProductResponse, FormData>({
+      query: (data) => ({
+        url: "/product/create",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["product"],
+    }),
     getProducts: builder.query<ProductsResponse, ProductsFilterParams>({
       query: (params) => ({
         url: "/products",
@@ -11,7 +25,13 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       providesTags: ["product"],
     }),
-    deleteProduct: builder.mutation<void, string>({
+    getProductById: builder.query<ProductByIdResponse, string>({
+      query: (id) => ({
+        url: `/product/${id}`,
+        method: "GET",
+      }),
+    }),
+    deleteProduct: builder.mutation<DeleteProductResponse, string>({
       query: (id) => ({
         url: `/product/delete/${id}`,
         method: "DELETE",
@@ -21,5 +41,9 @@ export const productApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useGetProductsQuery, useDeleteProductMutation } =
-  productApiSlice;
+export const {
+  useGetProductsQuery,
+  useDeleteProductMutation,
+  useCreateProductMutation,
+  useGetProductByIdQuery,
+} = productApiSlice;

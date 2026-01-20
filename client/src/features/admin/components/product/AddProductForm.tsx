@@ -1,47 +1,14 @@
-// product-form.tsx
-"use client";
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { X } from "lucide-react";
+import { useNavigate } from "react-router";
+import { X, Loader2 } from "lucide-react";
 import BreadCrumb from "@/components/BreadCrumb";
+import type { ProductFormValues } from "@/types/product"; // Update import
+import { useCreateProductMutation } from "@/store/rtk/productApi";
+import { toast } from "sonner";
+// import { zodResolver } from "@hookform/resolvers/zod";
+// import { productFormSchema } from "@/schema/product";
 
-// Zod schema with explicit default values
-const productFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
-  category: z.string().min(1, "Category is required"),
-  price: z
-    .string()
-    .min(1, "Price is required")
-    .regex(/^\d+(\.\d+)?$/, "Must be a valid number"),
-  instock_count: z.string().default("0"),
-  rating_count: z.string().default("0"),
-  is_feature: z.boolean().default(false),
-  is_new_arrival: z.boolean().default(false),
-  sizes: z.array(z.string()).default([]),
-  colors: z.array(z.string()).default([]),
-  images: z.instanceof(FileList).optional(),
-});
-
-// Type inference for the form
-type ProductFormValues = {
-  name: string;
-  description: string;
-  category: string;
-  price: string;
-  instock_count: string;
-  rating_count: string;
-  is_feature: boolean;
-  is_new_arrival: boolean;
-  sizes: string[];
-  colors: string[];
-  images?: FileList;
-};
-
-// Mock data
 const categories = [
   "Clothing",
   "Electronics",
@@ -55,17 +22,20 @@ const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 const availableColors = ["Black", "White", "Gray", "Silver", "Charcoal"];
 
 const AddProductForm = () => {
+  const navigate = useNavigate();
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
+  const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setValue,
-    watch,
+    // watch,
+    reset,
   } = useForm<ProductFormValues>({
     // resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -81,10 +51,9 @@ const AddProductForm = () => {
       colors: [],
     },
   });
-
   // Watch the boolean values for checkboxes
-  const isFeature = watch("is_feature");
-  const isNewArrival = watch("is_new_arrival");
+  // const isFeature = watch("is_feature");
+  // const isNewArrival = watch("is_new_arrival");
 
   const handleSizeToggle = (size: string) => {
     const newSizes = selectedSizes.includes(size)
@@ -114,7 +83,6 @@ const AddProductForm = () => {
     setSelectedFiles((prev) => [...prev, ...newFiles]);
     setPreviewUrls((prev) => [...prev, ...newUrls]);
 
-    // Clean up old URLs to prevent memory leaks
     setTimeout(() => {
       newUrls.forEach((url) => URL.revokeObjectURL(url));
     }, 1000);
@@ -125,48 +93,55 @@ const AddProductForm = () => {
     setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ProductFormValues) => {
     try {
-      console.log("Form Data:", data);
-      console.log("Selected Files:", selectedFiles);
+      if (selectedFiles.length === 0) {
+        toast.error("Please upload at least one image");
+        return;
+      }
 
-      // Prepare FormData for API submission
       const formData = new FormData();
 
-      // Add text fields
-      Object.entries(data).forEach(([key, value]) => {
-        if (key === "images") return;
+      formData.append("name", data.name);
+      formData.append("description", data.description);
+      formData.append("category", data.category);
+      formData.append("price", data.price);
+      formData.append("instock_count", data.instock_count);
+      formData.append("rating_count", data.rating_count);
+      formData.append("is_feature", data.is_feature.toString());
+      formData.append("is_new_arrival", data.is_new_arrival.toString());
 
-        if (Array.isArray(value)) {
-          // For arrays (sizes, colors), stringify them
-          formData.append(key, JSON.stringify(value));
-        } else if (typeof value === "boolean") {
-          // For booleans, convert to string
-          formData.append(key, value.toString());
-        } else if (value !== undefined) {
-          // For strings
-          formData.append(key, "");
-        }
-      });
+      // Stringify arrays
+      formData.append("sizes", JSON.stringify(data.sizes));
+      formData.append("colors", JSON.stringify(data.colors));
 
       // Add image files
       selectedFiles.forEach((file) => {
         formData.append("images", file);
       });
 
-      // Here you would call your API
-      // await createProduct(formData);
+      // Call the API mutation with FormData
+      const result = await createProduct(formData).unwrap();
 
-      // Log FormData for debugging
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
+      toast.success(result.message || "Product created successfully!");
 
-      alert("Product submitted successfully!");
-    } catch (error) {
+      // Reset form and clear all selections
+      reset();
+      setSelectedSizes([]);
+      setSelectedColors([]);
+      setSelectedFiles([]);
+      setPreviewUrls([]);
+      console.log(result.product);
+
+      navigate(`/dashboard/products/${result.product._id}`);
+    } catch (error: any) {
       console.error("Submission error:", error);
-      alert("Error submitting product");
+      toast.error(error.data.message);
     }
+  };
+
+  const handleCancel = () => {
+    navigate("/dashboard/products");
   };
 
   return (
@@ -204,12 +179,19 @@ const AddProductForm = () => {
                     </label>
                     <input
                       id="name"
-                      {...register("name")}
+                      {...register("name", {
+                        required: "Product name is required",
+                        minLength: {
+                          value: 3,
+                          message: "Product name must be at least 3 characters",
+                        },
+                      })}
                       type="text"
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all ${
                         errors.name ? "border-red-500" : "border-gray-300"
                       }`}
                       placeholder="Enter product name"
+                      disabled={isCreating}
                     />
                     {errors.name && (
                       <p className="mt-2 text-sm text-red-600">
@@ -228,7 +210,13 @@ const AddProductForm = () => {
                     </label>
                     <textarea
                       id="description"
-                      {...register("description")}
+                      {...register("description", {
+                        required: "Description is required",
+                        minLength: {
+                          value: 10,
+                          message: "Description must be at least 10 characters",
+                        },
+                      })}
                       rows={4}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all ${
                         errors.description
@@ -236,6 +224,7 @@ const AddProductForm = () => {
                           : "border-gray-300"
                       }`}
                       placeholder="Enter product description"
+                      disabled={isCreating}
                     />
                     {errors.description && (
                       <p className="mt-2 text-sm text-red-600">
@@ -256,10 +245,13 @@ const AddProductForm = () => {
                       </label>
                       <select
                         id="category"
-                        {...register("category")}
+                        {...register("category", {
+                          required: "Category is required",
+                        })}
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white ${
                           errors.category ? "border-red-500" : "border-gray-300"
                         }`}
+                        disabled={isCreating}
                       >
                         <option value="">Select a category</option>
                         {categories.map((category) => (
@@ -289,12 +281,23 @@ const AddProductForm = () => {
                         </span>
                         <input
                           id="price"
-                          {...register("price")}
+                          {...register("price", {
+                            required: "Price is required",
+                            pattern: {
+                              value: /^\d+(\.\d{1,2})?$/,
+                              message: "Enter a valid price (e.g., 19.99)",
+                            },
+                            min: {
+                              value: 0.01,
+                              message: "Price must be greater than 0",
+                            },
+                          })}
                           type="text"
                           className={`w-full pl-8 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all ${
                             errors.price ? "border-red-500" : "border-gray-300"
                           }`}
                           placeholder="0.00"
+                          disabled={isCreating}
                         />
                       </div>
                       {errors.price && (
@@ -325,10 +328,15 @@ const AddProductForm = () => {
                       accept="image/*"
                       onChange={handleFileChange}
                       className="hidden"
+                      disabled={isCreating}
                     />
                     <label
                       htmlFor="image-upload"
-                      className="cursor-pointer inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg hover:border-black transition-all"
+                      className={`cursor-pointer inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg transition-all ${
+                        isCreating
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:border-black"
+                      }`}
                     >
                       <span className="text-black">Choose Files</span>
                     </label>
@@ -356,13 +364,15 @@ const AddProductForm = () => {
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index)}
-                              className="absolute -top-2 -right-2 bg-black text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X size={16} />
-                            </button>
+                            {!isCreating && (
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index)}
+                                className="absolute -top-2 -right-2 bg-black text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
                             <p className="mt-2 text-xs text-gray-600 truncate">
                               {file.name}
                             </p>
@@ -370,6 +380,11 @@ const AddProductForm = () => {
                         ))}
                       </div>
                     </div>
+                  )}
+                  {selectedFiles.length === 0 && !isCreating && (
+                    <p className="mt-4 text-sm text-red-600">
+                      Please upload at least one image
+                    </p>
                   )}
                 </div>
               </div>
@@ -394,12 +409,23 @@ const AddProductForm = () => {
                     </label>
                     <input
                       id="instock_count"
-                      {...register("instock_count")}
+                      {...register("instock_count", {
+                        min: {
+                          value: 0,
+                          message: "Stock count cannot be negative",
+                        },
+                      })}
                       type="number"
                       min="0"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                       placeholder="0"
+                      disabled={isCreating}
                     />
+                    {errors.instock_count && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {errors.instock_count.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Rating Count Field */}
@@ -412,13 +438,24 @@ const AddProductForm = () => {
                     </label>
                     <input
                       id="rating_count"
-                      {...register("rating_count")}
+                      {...register("rating_count", {
+                        min: {
+                          value: 0,
+                          message: "Rating count cannot be negative",
+                        },
+                      })}
                       type="number"
                       min="0"
                       step="0.1"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                       placeholder="0.0"
+                      disabled={isCreating}
                     />
+                    {errors.rating_count && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {errors.rating_count.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -440,11 +477,12 @@ const AddProductForm = () => {
                         key={size}
                         type="button"
                         onClick={() => handleSizeToggle(size)}
+                        disabled={isCreating}
                         className={`px-4 py-2 rounded-lg border transition-all ${
                           selectedSizes.includes(size)
                             ? "bg-black text-white border-black"
                             : "bg-white text-black border-gray-300 hover:border-black"
-                        }`}
+                        } ${isCreating ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         {size}
                       </button>
@@ -464,11 +502,12 @@ const AddProductForm = () => {
                         key={color}
                         type="button"
                         onClick={() => handleColorToggle(color)}
+                        disabled={isCreating}
                         className={`px-4 py-2 rounded-lg border transition-all flex items-center gap-2 ${
                           selectedColors.includes(color)
                             ? "bg-black text-white border-black"
                             : "bg-white text-black border-gray-300 hover:border-black"
-                        }`}
+                        } ${isCreating ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         <div
                           className="w-4 h-4 rounded-full border border-gray-300"
@@ -492,11 +531,14 @@ const AddProductForm = () => {
 
                 <div className="space-y-4">
                   {/* Feature Product */}
-                  <label className="flex items-center space-x-3 cursor-pointer">
+                  <label
+                    className={`flex items-center space-x-3 ${isCreating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
                     <input
                       type="checkbox"
                       {...register("is_feature")}
                       className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
+                      disabled={isCreating}
                     />
                     <span className="text-black font-medium">
                       Feature Product
@@ -504,11 +546,14 @@ const AddProductForm = () => {
                   </label>
 
                   {/* New Arrival */}
-                  <label className="flex items-center space-x-3 cursor-pointer">
+                  <label
+                    className={`flex items-center space-x-3 ${isCreating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
                     <input
                       type="checkbox"
                       {...register("is_new_arrival")}
                       className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
+                      disabled={isCreating}
                     />
                     <span className="text-black font-medium">New Arrival</span>
                   </label>
@@ -521,16 +566,25 @@ const AddProductForm = () => {
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
             <button
               type="button"
-              className="px-6 py-3 border border-gray-300 rounded-lg text-black hover:border-black transition-all"
+              onClick={handleCancel}
+              disabled={isCreating}
+              className="px-6 py-3 border border-gray-300 rounded-lg text-black hover:border-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isCreating || selectedFiles.length === 0}
+              className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-35"
             >
-              {isSubmitting ? "Creating..." : "Create Product"}
+              {isCreating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Product"
+              )}
             </button>
           </div>
         </form>

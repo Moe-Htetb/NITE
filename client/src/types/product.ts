@@ -3,18 +3,23 @@ interface Image {
   public_alt?: string;
   _id: string;
 }
+
 export interface Product {
   _id: string;
   name: string;
+  description: string;
   category: string;
   price: number;
   instock_count: number;
   is_feature: boolean;
+  rating_count: number;
+  userId: string;
   is_new_arrival: boolean;
   colors: string[];
   images: Image[];
   sizes: string[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProductsResponse {
@@ -44,6 +49,9 @@ export interface ProductsResponse {
     total: number;
   };
 }
+export interface ProductByIdResponse {
+  product: Product;
+}
 
 export interface ProductsFilterParams {
   keyword?: string;
@@ -56,4 +64,37 @@ export interface ProductsFilterParams {
   sort_direction?: string;
   page?: number;
   limit?: number;
+}
+
+export interface ProductFormValues {
+  name: string;
+  description: string;
+  category: string;
+  price: string;
+  instock_count: string;
+  rating_count: string;
+  is_feature: boolean;
+  is_new_arrival: boolean;
+  sizes: string[];
+  colors: string[];
+  images?: FileList;
+}
+
+export interface CreateProductResponse {
+  message: string;
+  product: Product;
+}
+
+export interface UpdateProductData extends Partial<
+  Omit<Product, "_id" | "createdAt" | "updatedAt" | "userId">
+> {
+  _id: string;
+}
+
+export interface UpdateProductResponse extends Product {
+  message: string;
+}
+
+export interface DeleteProductResponse {
+  message: string;
 }

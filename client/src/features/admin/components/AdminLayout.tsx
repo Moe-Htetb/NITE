@@ -4,23 +4,26 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import AdminSidebar from "./AdminSidebar";
-// import { useEffect } from "react";
+import { useEffect } from "react";
 // import { getCookie } from "react-use-cookie";
-import {
-  Outlet,
-  // useNavigate
-} from "react-router";
+import { Outlet, useNavigate } from "react-router";
+import { memo } from "react";
+import { useAppSelector } from "@/types/useRedux";
+import { selectIsAuthenticated, selectUserRole } from "@/store/authSlice";
 
 const AdminLayout = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const token = getCookie("token");
-  //   console.log(token);
-  //   if (!token) {
-  //     navigate("/login");
-  //   }
-  // }, [navigate]); // Added navigate as dependency
+  const userRole = useAppSelector(selectUserRole);
+  const isLogin = useAppSelector(selectIsAuthenticated);
+  useEffect(() => {
+    if (!isLogin) {
+      navigate("/login");
+    }
+    if (userRole !== "admin") {
+      navigate("/");
+    }
+  }, [navigate]);
 
   return (
     <SidebarProvider>
@@ -38,4 +41,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default memo(AdminLayout);

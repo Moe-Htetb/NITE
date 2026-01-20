@@ -273,7 +273,7 @@ export const deleteProductController = asyncHandler(
     }
 
     await existingProduct.deleteOne();
-    res.status(404).json({ message: "Product destory!" });
+    res.status(200).json({ message: "Product destory Scuuessfully!" });
   },
 );
 
