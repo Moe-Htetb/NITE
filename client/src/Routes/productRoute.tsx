@@ -7,6 +7,9 @@ const ProductPage = lazy(() => import("../features/admin/pages/ProductPage"));
 const ProductDetailPage = lazy(
   () => import("../features/admin/pages/ProductDetailPage"),
 );
+const ProductEditPage = lazy(
+  () => import("../features/admin/pages/ProductEditPage"),
+);
 
 export const productRoute = [
   {
@@ -16,6 +19,10 @@ export const productRoute = [
   {
     path: "products/add-product",
     element: <AddProductForm />,
+  },
+  {
+    path: "products/edit-product/:id",
+    element: <ProductEditPage />,
   },
   {
     path: "products/:id",

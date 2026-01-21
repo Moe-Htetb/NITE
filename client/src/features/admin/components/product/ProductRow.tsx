@@ -166,7 +166,7 @@ const ProductRow = ({ product }: ProductRowProps) => {
                 <Eye className="h-4 w-4 text-gray-600" />
               </Button>
             </Link>
-            <Link to={`/dashboard/products/edit/${product._id}`}>
+            <Link to={`/dashboard/products/edit-product/${product._id}`}>
               <Button
                 variant="ghost"
                 size="sm"

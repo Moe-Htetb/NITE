@@ -12,10 +12,6 @@ import { deleteImage, uploadSingleImage } from "../cloud/cloudinary";
 export const createProductController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      // Log what's coming in FormData
-      console.log("FormData body:", req.body);
-      console.log("Files:", req.files);
-
       const {
         name,
         description,
@@ -29,51 +25,63 @@ export const createProductController = asyncHandler(
         colors: colorsInput,
       } = req.body;
 
-      // Validate required fields
-      if (!name || !description || !category || !price) {
-        throw new Error("Required fields: name, description, category, price");
-      }
-
-      // Parse arrays from FormData strings
       let sizesArray: string[] = [];
       if (sizesInput) {
         try {
-          sizesArray =
+          const parsedSizes =
             typeof sizesInput === "string"
               ? JSON.parse(sizesInput)
-              : Array.isArray(sizesInput)
-                ? sizesInput
-                : [sizesInput];
+              : sizesInput;
+
+          if (Array.isArray(parsedSizes) && parsedSizes.length > 0) {
+            sizesArray = [
+              ...new Set(
+                parsedSizes.map((size: any) =>
+                  String(size).toUpperCase().trim(),
+                ),
+              ),
+            ];
+          } else if (
+            typeof parsedSizes === "string" &&
+            parsedSizes.trim() !== ""
+          ) {
+            sizesArray = [parsedSizes.toUpperCase().trim()];
+          }
         } catch (e) {
-          sizesArray = [sizesInput as string];
+          sizesArray = [String(sizesInput).toUpperCase().trim()];
         }
       }
 
       let colorsArray: string[] = [];
       if (colorsInput) {
         try {
-          colorsArray =
+          const parsedColors =
             typeof colorsInput === "string"
               ? JSON.parse(colorsInput)
-              : Array.isArray(colorsInput)
-                ? colorsInput
-                : [colorsInput];
+              : colorsInput;
+
+          if (Array.isArray(parsedColors) && parsedColors.length > 0) {
+            // Remove duplicates
+            colorsArray = [
+              ...new Set(
+                parsedColors.map((color: any) => String(color).trim()),
+              ),
+            ];
+          } else if (
+            typeof parsedColors === "string" &&
+            parsedColors.trim() !== ""
+          ) {
+            colorsArray = [parsedColors.trim()];
+          }
         } catch (e) {
-          colorsArray = [colorsInput as string];
+          colorsArray = [String(colorsInput).trim()];
         }
       }
 
-      // Convert string numbers to actual numbers
       const priceNum = parseFloat(price);
       const instockCountNum = instock_count ? parseInt(instock_count, 10) : 0;
       const ratingCountNum = rating_count ? parseFloat(rating_count) : 0;
 
-      // Validate numbers
-      if (isNaN(priceNum)) {
-        throw new Error("Price must be a valid number");
-      }
-
-      // Parse booleans from FormData strings
       const isFeature =
         is_feature === "true" || is_feature === true || is_feature === "1";
       const isNewArrival =
@@ -81,23 +89,10 @@ export const createProductController = asyncHandler(
         is_new_arrival === true ||
         is_new_arrival === "1";
 
-      // Check if product with same name already exists
-      const existingProduct = await Product.findOne({ name });
-
-      if (existingProduct) {
-        throw new Error("Product with this name already exists");
-      }
-
-      // Handle image uploads from FormData
       const images = req.files as Express.Multer.File[];
-
-      if (!images || images.length === 0) {
-        throw new Error("At least one image is required");
-      }
 
       const uploadedImages = await Promise.all(
         images.map(async (image) => {
-          // Convert buffer to base64 string properly for Cloudinary
           const base64Image = image.buffer.toString("base64");
           const dataUri = `data:${image.mimetype};base64,${base64Image}`;
 
@@ -157,107 +152,241 @@ export const getSingleProductController = asyncHandler(
   },
 );
 
-//@route POST | /api/v1/product/update/:id
+//@route PATCH | /api/v1/product/update/:id
 // @desc create product
 // @access admin
 export const updateProductController = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const { name, description, category, existingImages } = req.body;
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const {
+        name,
+        description,
+        category,
+        price,
+        instock_count,
+        rating_count,
+        is_feature,
+        is_new_arrival,
+        sizes: sizesInput,
+        colors: colorsInput,
+        existingImages,
+      } = req.body;
 
-    const sizes = Array.isArray(req.body.sizes)
-      ? req.body.sizes
-      : [req.body.sizes];
-    const colors = Array.isArray(req.body.colors)
-      ? req.body.colors
-      : [req.body.colors];
+      const { id } = req.params;
 
-    const price = Number(req.body.price);
-    const instock_count = Number(req.body.instock_count);
-    const rating_count = Number(req.body.rating_count);
+      const existingProduct = await Product.findById(id);
+      if (!existingProduct) {
+        res.status(404);
+        throw new Error("No product found with this id.");
+      }
 
-    const is_feature = req.body.is_feature === "true";
-    const is_new_arrival = req.body.is_new_arrival === "true";
+      let sizesArray: string[] = existingProduct.sizes;
+      if (
+        sizesInput !== undefined &&
+        sizesInput !== null &&
+        sizesInput !== ""
+      ) {
+        try {
+          const parsedSizes =
+            typeof sizesInput === "string"
+              ? JSON.parse(sizesInput)
+              : sizesInput;
 
-    // parse existing images
-    const keepExistingImages = existingImages ? JSON.parse(existingImages) : [];
-
-    // new images
-    const newImages = req.files as Express.Multer.File[];
-
-    const { id } = req.params;
-
-    const existingProduct = await Product.findById(id);
-
-    if (!existingProduct) {
-      res.status(404);
-      throw new Error("No product found with is id.");
-    }
-
-    // existing product image from db -> [{url:image_url,public_alt:abcd},{url:image_url,public_alt:efgh}]
-    // existing image -> [{url:image_url,public_alt:abcd}]
-    // [{url:image_url,public_alt:abcd}] existing images
-    // [{url:image_url,public_alt:efgh}] image to delete
-
-    // find images to delete from cloud
-    const imagesToDelete = existingProduct.images.filter((existingImg) => {
-      return !keepExistingImages.some(
-        (keepImg: any) => keepImg.public_alt === existingImg.public_alt,
-      );
-    });
-
-    if (imagesToDelete.length > 0) {
-      await Promise.all(
-        imagesToDelete.map(async (img) => {
-          if (img.public_alt) {
-            try {
-              await deleteImage(img.public_alt);
-            } catch (err) {
-              console.log(`Failed to delete image ${img.public_alt}`, err);
-            }
+          if (Array.isArray(parsedSizes) && parsedSizes.length > 0) {
+            sizesArray = parsedSizes.map((size: any) => String(size).trim());
+          } else if (
+            typeof parsedSizes === "string" &&
+            parsedSizes.trim() !== ""
+          ) {
+            sizesArray = [parsedSizes.trim()];
           }
-        }),
-      );
-    }
+        } catch (e) {
+          console.error("Error parsing sizes:", e);
+        }
+      }
 
-    // upload new images
-    let uploadedNewImages: any[] = [];
-    if (newImages && newImages.length > 0) {
-      uploadedNewImages = await Promise.all(
-        newImages.map(async (image) => {
-          const uploadImg = await uploadSingleImage(
-            `data:${image.mimetype};base64,${image.buffer.toString("base64")}`,
-            "fash.com/products",
+      let colorsArray: string[] = existingProduct.colors;
+      if (
+        colorsInput !== undefined &&
+        colorsInput !== null &&
+        colorsInput !== ""
+      ) {
+        try {
+          const parsedColors =
+            typeof colorsInput === "string"
+              ? JSON.parse(colorsInput)
+              : colorsInput;
+
+          if (Array.isArray(parsedColors) && parsedColors.length > 0) {
+            colorsArray = parsedColors.map((color: any) =>
+              String(color).trim(),
+            );
+          } else if (
+            typeof parsedColors === "string" &&
+            parsedColors.trim() !== ""
+          ) {
+            colorsArray = [parsedColors.trim()];
+          }
+        } catch (e) {
+          console.error("Error parsing colors:", e);
+        }
+      }
+
+      const priceNum =
+        price !== undefined && price !== null && price !== ""
+          ? parseFloat(price)
+          : existingProduct.price;
+
+      const instockCountNum =
+        instock_count !== undefined &&
+        instock_count !== null &&
+        instock_count !== ""
+          ? parseInt(instock_count, 10)
+          : existingProduct.instock_count;
+
+      const ratingCountNum =
+        rating_count !== undefined &&
+        rating_count !== null &&
+        rating_count !== ""
+          ? parseFloat(rating_count)
+          : existingProduct.rating_count;
+
+      const isFeature =
+        is_feature !== undefined && is_feature !== null && is_feature !== ""
+          ? is_feature === "true" || is_feature === true || is_feature === "1"
+          : existingProduct.is_feature;
+
+      const isNewArrival =
+        is_new_arrival !== undefined &&
+        is_new_arrival !== null &&
+        is_new_arrival !== ""
+          ? is_new_arrival === "true" ||
+            is_new_arrival === true ||
+            is_new_arrival === "1"
+          : existingProduct.is_new_arrival;
+
+      if (name && name.trim() !== existingProduct.name) {
+        const duplicateProduct = await Product.findOne({
+          name: name.trim(),
+          _id: { $ne: id },
+        });
+
+        if (duplicateProduct) {
+          throw new Error("Product with this name already exists");
+        }
+      }
+
+      let finalImages = existingProduct.images;
+
+      let keepExistingImages: any[] = [];
+
+      if (
+        existingImages !== undefined &&
+        existingImages !== null &&
+        existingImages !== ""
+      ) {
+        try {
+          const parsedImages =
+            typeof existingImages === "string"
+              ? JSON.parse(existingImages)
+              : existingImages;
+
+          if (Array.isArray(parsedImages)) {
+            keepExistingImages = parsedImages.filter(
+              (img: any) =>
+                img &&
+                typeof img === "object" &&
+                typeof img.url === "string" &&
+                typeof img.public_alt === "string" &&
+                img.url.trim() !== "" &&
+                img.public_alt.trim() !== "",
+            );
+          }
+        } catch (e) {
+          console.error("Error parsing existingImages:", e);
+
+          keepExistingImages = existingProduct.images;
+        }
+      } else {
+        keepExistingImages = existingProduct.images;
+      }
+
+      if (keepExistingImages.length > 0) {
+        const imagesToDelete = existingProduct.images.filter((existingImg) => {
+          return !keepExistingImages.some(
+            (keepImg: any) => keepImg.public_alt === existingImg.public_alt,
           );
-          return {
-            url: uploadImg.url,
-            public_alt: uploadImg.public_alt,
-          };
-        }),
-      );
+        });
+
+        if (imagesToDelete.length > 0) {
+          await Promise.all(
+            imagesToDelete.map(async (img) => {
+              if (img.public_alt) {
+                try {
+                  await deleteImage(img.public_alt);
+                } catch (err) {
+                  console.error(
+                    `Failed to delete image ${img.public_alt}`,
+                    err,
+                  );
+                }
+              }
+            }),
+          );
+        }
+      }
+
+      let uploadedNewImages: any[] = [];
+      const newImages = req.files as Express.Multer.File[];
+
+      if (newImages && newImages.length > 0) {
+        uploadedNewImages = await Promise.all(
+          newImages.map(async (image) => {
+            const base64Image = image.buffer.toString("base64");
+            const dataUri = `data:${image.mimetype};base64,${base64Image}`;
+
+            const uploadImg = await uploadSingleImage(dataUri, "NITE/products");
+            return {
+              url: uploadImg.url,
+              public_alt: uploadImg.public_alt,
+            };
+          }),
+        );
+      }
+
+      finalImages = [...keepExistingImages, ...uploadedNewImages];
+
+      if (finalImages.length === 0) {
+        throw new Error("At least one image is required");
+      }
+
+      if (name !== undefined) existingProduct.name = name.trim();
+      if (description !== undefined)
+        existingProduct.description = description.trim();
+      if (category !== undefined) existingProduct.category = category.trim();
+
+      existingProduct.price = priceNum;
+      existingProduct.instock_count = instockCountNum;
+      existingProduct.sizes = sizesArray;
+      existingProduct.colors = colorsArray;
+      existingProduct.images = finalImages;
+      existingProduct.is_new_arrival = isNewArrival;
+      existingProduct.is_feature = isFeature;
+      existingProduct.rating_count = ratingCountNum;
+
+      const updatedProduct = await existingProduct.save();
+
+      res.status(200).json({
+        success: true,
+        message: `${updatedProduct.name} updated successfully`,
+        product: updatedProduct,
+      });
+    } catch (error: any) {
+      console.error("Update product error:", error);
+      next(error);
     }
-
-    const finalImages = [...keepExistingImages, ...uploadedNewImages];
-
-    existingProduct.name = name || existingProduct.name;
-    existingProduct.description = description || existingProduct.description;
-    existingProduct.price = price || existingProduct.price;
-    existingProduct.instock_count =
-      instock_count || existingProduct.instock_count;
-    existingProduct.category = category || existingProduct.category;
-    existingProduct.sizes = sizes || existingProduct.sizes;
-    existingProduct.colors = colors || existingProduct.colors;
-    existingProduct.images = finalImages;
-    existingProduct.is_new_arrival =
-      is_new_arrival || existingProduct.is_new_arrival;
-    existingProduct.is_feature = is_feature || existingProduct.is_feature;
-    existingProduct.rating_count = rating_count || existingProduct.rating_count;
-
-    const updatedProduct = await existingProduct.save();
-
-    res.status(200).json(updatedProduct);
   },
 );
-
 //@route POST | /api/v1/product/delete/:id
 // @desc create product
 // @access admin

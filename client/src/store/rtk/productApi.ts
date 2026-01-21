@@ -4,6 +4,7 @@ import type {
   ProductByIdResponse,
   ProductsFilterParams,
   ProductsResponse,
+  UpdateProductResponse,
 } from "@/types/product";
 import { apiSlice } from "./rtk";
 
@@ -30,6 +31,18 @@ export const productApiSlice = apiSlice.injectEndpoints({
         url: `/product/${id}`,
         method: "GET",
       }),
+      providesTags: ["product"],
+    }),
+    updateProduct: builder.mutation<
+      UpdateProductResponse,
+      { id: string; data: FormData }
+    >({
+      query: ({ id, data }) => ({
+        url: `/product/update/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["product"],
     }),
     deleteProduct: builder.mutation<DeleteProductResponse, string>({
       query: (id) => ({
@@ -46,4 +59,5 @@ export const {
   useDeleteProductMutation,
   useCreateProductMutation,
   useGetProductByIdQuery,
+  useUpdateProductMutation,
 } = productApiSlice;

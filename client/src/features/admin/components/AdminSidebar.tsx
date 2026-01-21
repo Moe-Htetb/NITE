@@ -122,9 +122,7 @@ const AdminSidebar = () => {
                         isActive={isActive}
                         tooltip={item.title}
                         className={`${
-                          isActive
-                            ? "bg-black text-white hover:bg-gray-800"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-black"
+                          isActive ? "bg-black text-white " : "text-gray-700"
                         }`}
                       >
                         <Link to={item.url}>

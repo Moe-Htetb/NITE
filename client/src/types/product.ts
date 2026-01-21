@@ -84,6 +84,11 @@ export interface CreateProductResponse {
   message: string;
   product: Product;
 }
+export interface UpdateProductResponse {
+  success: string;
+  message: string;
+  product: Product;
+}
 
 export interface UpdateProductData extends Partial<
   Omit<Product, "_id" | "createdAt" | "updatedAt" | "userId">

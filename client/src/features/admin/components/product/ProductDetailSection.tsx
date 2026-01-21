@@ -188,7 +188,7 @@ const ProductDetailSection = () => {
               {/* data?.product.Info */}
               <div className="space-y-4 text-sm text-gray-600">
                 <div className="flex justify-between">
-                  <span>data?.product.ID:</span>
+                  <span>product ID:</span>
                   <span className="font-mono text-gray-800">
                     {data?.product._id}
                   </span>
