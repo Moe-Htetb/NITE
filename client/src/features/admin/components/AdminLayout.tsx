@@ -7,7 +7,7 @@ import AdminSidebar from "./AdminSidebar";
 import { useEffect } from "react";
 // import { getCookie } from "react-use-cookie";
 import { Outlet, useNavigate } from "react-router";
-import { memo } from "react";
+// import { memo } from "react";
 import { useAppSelector } from "@/types/useRedux";
 import { selectIsAuthenticated, selectUserRole } from "@/store/authSlice";
 
@@ -41,4 +41,4 @@ const AdminLayout = () => {
   );
 };
 
-export default memo(AdminLayout);
+export default AdminLayout;

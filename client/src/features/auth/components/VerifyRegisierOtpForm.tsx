@@ -1,21 +1,21 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router";
-import { getCookie, removeCookie, setCookie } from "react-use-cookie";
+import { getCookie, removeCookie } from "react-use-cookie";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { otpFormInputs } from "@/types/formInputs";
 import { otpSchema } from "@/schema/auth";
 import {
-  useForgotPasswordMutation,
-  type verifyForgotPasswordOtpResponse,
+  useVerifyRegisterOtpMutation,
+  type VerifyRegisterOtpResponse,
 } from "@/store/rtk/authApi";
 import { ArrowLeft, Shield, Timer, Loader2 } from "lucide-react";
 
-const VerifyOtpForm = () => {
-  const resetInfoCookie = getCookie("resetInfo");
-  const resetInfo = resetInfoCookie ? JSON.parse(resetInfoCookie) : null;
-  console.log(resetInfo);
+const VerifyRegisterOtpForm = () => {
+  const userInfoCookie = getCookie("userInfo");
+  const userInfo = userInfoCookie ? JSON.parse(userInfoCookie) : null;
+  console.log("User Info from cookie:", userInfo);
 
   const {
     register,
@@ -121,47 +121,48 @@ const VerifyOtpForm = () => {
   };
 
   const { ref: otpInputRef, ...otpRest } = register("otp");
-  const [verifyForgotPassword, { isLoading }] = useForgotPasswordMutation();
+  const [verifyRegisterOtp, { isLoading }] = useVerifyRegisterOtpMutation();
 
-  const onSubmitHandler = async (otp: otpFormInputs) => {
+  const onSubmitHandler = async (otpData: otpFormInputs) => {
     try {
-      console.log("resetInfo from cookie:", resetInfo);
+      console.log("User info from cookie:", userInfo);
 
-      if (!resetInfo || !resetInfo.email) {
-        toast.error("Reset information not found. Please try again.");
+      if (!userInfo || !userInfo.email || !userInfo.token) {
+        toast.error(
+          "Registration information not found. Please register again.",
+        );
+        navigate("/register");
         return;
       }
 
-      const data = { ...otp, ...resetInfo };
+      const data = {
+        name: userInfo.name,
+        email: userInfo.email,
+        password: userInfo.password,
+        otp: otpData.otp,
+        token: userInfo.token,
+      };
+
       console.log("Data sent to API:", data);
 
-      const response: verifyForgotPasswordOtpResponse =
-        await verifyForgotPassword(data).unwrap();
+      const response: VerifyRegisterOtpResponse =
+        await verifyRegisterOtp(data).unwrap();
 
       console.log("API Response:", response);
 
-      if (!response.token) {
-        toast.error("Invalid response from server. Please try again.");
+      if (!response.success) {
+        toast.error(response.message || "OTP verification failed");
         return;
       }
 
-      // Prepare new user info
-      const userInfo = {
-        email: resetInfo.email,
-        token: response.token,
-      };
+      // Clear the temporary registration cookie
+      removeCookie("userInfo");
 
-      console.log("User Info to store in cookie:", userInfo);
+      toast.success("Registration completed successfully!");
 
-      // Try setting cookie with different options
-      setCookie("userInfo", JSON.stringify(userInfo));
-      removeCookie("resetInfo");
-
-      toast.success("OTP verified successfully!");
-
-      // Small delay before navigation to ensure cookie is set
+      // Navigate to login page
       setTimeout(() => {
-        navigate("/reset-password");
+        navigate("/login");
       }, 100);
     } catch (error: any) {
       console.error("OTP verification error:", error);
@@ -173,17 +174,28 @@ const VerifyOtpForm = () => {
     }
   };
 
-  // const handleResendOtp = async () => {
-  //   // TODO: Implement resend OTP logic
-  //   console.log("Resend OTP requested for:", resetInfo?.email || userInfo?.email);
-  //   toast.info("Resend OTP feature will be implemented soon");
-  //   // Reset timer to 2 minutes
-  //   setTimer(120);
-  //   setIsTimerActive(true);
-  // };
+  const handleResendOtp = async () => {
+    try {
+      if (!userInfo || !userInfo.email) {
+        toast.error("User information not found");
+        return;
+      }
+
+      // You might want to implement a separate API endpoint for resending registration OTP
+      // For now, we'll show a toast message
+      toast.info("Resend OTP feature will be implemented soon");
+
+      // Reset timer to 2 minutes
+      setTimer(120);
+      setIsTimerActive(true);
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      toast.error("Failed to resend OTP. Please try again.");
+    }
+  };
 
   // Determine which email to display
-  const displayEmail = resetInfo?.email || "your email";
+  const displayEmail = userInfo?.email || "your email";
 
   return (
     <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md border border-gray-200">
@@ -192,10 +204,10 @@ const VerifyOtpForm = () => {
           <Shield className="w-8 h-8 text-gray-800" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900">
-          Enter verification code
+          Complete your registration
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          We sent a 6-digit code to{" "}
+          We sent a 6-digit verification code to{" "}
           <span className="font-medium">{displayEmail}</span>
         </p>
       </div>
@@ -276,7 +288,7 @@ const VerifyOtpForm = () => {
               Verifying...
             </span>
           ) : (
-            "Verify code"
+            "Complete Registration"
           )}
         </button>
 
@@ -285,7 +297,7 @@ const VerifyOtpForm = () => {
             Didn't receive the code?
             <button
               type="button"
-              // onClick={handleResendOtp}
+              onClick={handleResendOtp}
               disabled={isTimerActive}
               className={`ml-1 font-medium transition duration-300 ${
                 isTimerActive
@@ -299,11 +311,11 @@ const VerifyOtpForm = () => {
 
           <div className="pt-4 border-t border-gray-100">
             <Link
-              to="/login"
+              to="/signup"
               className="inline-flex items-center text-sm text-gray-600 hover:text-black font-medium transition duration-300 group"
             >
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
-              Back to sign in
+              Back to sign up
             </Link>
           </div>
         </div>
@@ -312,4 +324,4 @@ const VerifyOtpForm = () => {
   );
 };
 
-export default VerifyOtpForm;
+export default VerifyRegisterOtpForm;

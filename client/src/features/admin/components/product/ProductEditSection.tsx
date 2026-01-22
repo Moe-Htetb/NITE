@@ -76,15 +76,6 @@ const sizeOptions = [
   { value: "XXL", label: "XXL" },
   { value: "3XL", label: "3XL" },
   { value: "4XL", label: "4XL" },
-  { value: "ONE SIZE", label: "ONE SIZE" },
-  { value: "28", label: "28" },
-  { value: "30", label: "30" },
-  { value: "32", label: "32" },
-  { value: "34", label: "34" },
-  { value: "36", label: "36" },
-  { value: "38", label: "38" },
-  { value: "40", label: "40" },
-  { value: "42", label: "42" },
 ];
 
 const ProductEditSection = () => {
@@ -336,7 +327,7 @@ const ProductEditSection = () => {
             Back to Products
           </Button>
           <BreadCrumb
-            currentPageTitle={`edit-product}`}
+            currentPageTitle={`edit-product`}
             links={[{ title: "Products", path: "/dashboard/products" }]}
           />
         </div>
