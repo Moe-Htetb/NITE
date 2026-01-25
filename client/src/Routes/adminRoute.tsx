@@ -7,6 +7,7 @@ const AdminLayout = lazy(
 const DashboardSection = lazy(
   () => import("../features/admin/components/DashboardSection"),
 );
+const UserPage = lazy(() => import("../features/admin/pages/UserPage"));
 
 const adminRoute = [
   {
@@ -16,6 +17,10 @@ const adminRoute = [
       {
         index: true, // This will match /dashboard
         element: <DashboardSection />,
+      },
+      {
+        path: "/dashboard/users",
+        element: <UserPage />,
       },
       ...productRoute,
     ],

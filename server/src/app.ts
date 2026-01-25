@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: process.env.CLIENT_LOCAL_URL,
     credentials: true,
-  })
+  }),
 );
 
 //route setup

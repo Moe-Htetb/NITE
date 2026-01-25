@@ -43,7 +43,7 @@ export const registerController = asyncHandler(
       data = await Otp.create(otpData);
     } else {
       const lastOtpRequest = new Date(
-        existEmail.updatedAt as unknown as string | number | Date
+        existEmail.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString();
       const currentDate = new Date().toLocaleDateString();
       const isSameDate = lastOtpRequest === currentDate;
@@ -89,7 +89,7 @@ export const registerController = asyncHandler(
       res.status(400);
       throw new Error("Failed to send OTP email. Please try again.");
     }
-  }
+  },
 );
 // @route POST | api/verify-register-otp
 // desc Verify OTP for registration
@@ -122,7 +122,7 @@ export const verifyRegisterOtpController = asyncHandler(
     // Check if OTP is from same date
     const isSameDate =
       new Date(
-        otpRow.updatedAt as unknown as string | number | Date
+        otpRow.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString() === new Date().toLocaleDateString();
 
     // Check error count limit
@@ -142,7 +142,7 @@ export const verifyRegisterOtpController = asyncHandler(
         {
           errorCount: 5,
         },
-        { new: true }
+        { new: true },
       );
       res.status(400).json({
         error: "Invalid token",
@@ -155,7 +155,7 @@ export const verifyRegisterOtpController = asyncHandler(
     const isOtpExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 5;
     if (isOtpExpired) {
       res.status(403).json({
@@ -175,7 +175,7 @@ export const verifyRegisterOtpController = asyncHandler(
         {
           errorCount: newErrorCount,
         },
-        { new: true }
+        { new: true },
       );
 
       res.status(400).json({
@@ -196,7 +196,7 @@ export const verifyRegisterOtpController = asyncHandler(
       success: true,
       message: "Account created successfully",
     });
-  }
+  },
 );
 
 //@route POST | /api/v1/login
@@ -246,7 +246,7 @@ export const loginController = asyncHandler(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //@route POST | /api/v1/logout
@@ -260,7 +260,7 @@ export const logoutController = asyncHandler(
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
     res.status(200).json({ success: true, message: "Logout successful" });
-  }
+  },
 );
 
 //@route POST | /api/v1/profileUpload
@@ -291,7 +291,7 @@ export const profileUploadController = asyncHandler(
         if (userInfo.profile.public_alt) {
           console.log(
             "Deleting old image with public_alt:",
-            userInfo.profile.public_alt
+            userInfo.profile.public_alt,
           );
           await deleteImage(userInfo.profile.public_alt);
         }
@@ -304,7 +304,7 @@ export const profileUploadController = asyncHandler(
           if (firstProfile.public_alt) {
             console.log(
               "Deleting old image from array with public_alt:",
-              firstProfile.public_alt
+              firstProfile.public_alt,
             );
             await deleteImage(firstProfile.public_alt);
           }
@@ -327,7 +327,7 @@ export const profileUploadController = asyncHandler(
             public_alt: response.public_alt, // Make sure this matches what Cloudinary returns
           },
         },
-        { new: true }
+        { new: true },
       ).select("-password");
 
       // Get profile URL for response
@@ -364,7 +364,7 @@ export const profileUploadController = asyncHandler(
       console.error("Profile upload error:", error);
       next(error);
     }
-  }
+  },
 );
 //@route POST | /api/v1/profile
 // @desc login user getting profile
@@ -375,7 +375,7 @@ export const getUserProfileController = asyncHandler(
     const user = req.user;
     const userInfo = await User.findById(user?._id).select("-password");
     res.status(200).json({ user: userInfo });
-  }
+  },
 );
 
 //@route POST | /api/v1/updateEmail
@@ -436,7 +436,7 @@ export const updateEmailController = asyncHandler(
     } else {
       // Check if OTP was requested on the same day
       const lastOtpRequest = new Date(
-        existEmail.updatedAt as unknown as string | number | Date
+        existEmail.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString();
       const currentDate = new Date().toLocaleDateString();
       const isSameDate = lastOtpRequest === currentDate;
@@ -533,7 +533,7 @@ export const updateEmailController = asyncHandler(
         throw new Error("Failed to send verification email. Please try again.");
       }
     }
-  }
+  },
 );
 
 //@route POST | /api/v1/verify-update-email
@@ -576,7 +576,7 @@ export const updateEmailVerifyController = asyncHandler(
     // Check if OTP is from same date
     const isSameDate =
       new Date(
-        otpRow.updatedAt as unknown as string | number | Date
+        otpRow.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString() === new Date().toLocaleDateString();
 
     // Check error count limit
@@ -596,7 +596,7 @@ export const updateEmailVerifyController = asyncHandler(
         {
           errorCount: 5,
         },
-        { new: true }
+        { new: true },
       );
       res.status(400).json({
         error: "Invalid token",
@@ -609,7 +609,7 @@ export const updateEmailVerifyController = asyncHandler(
     const isOtpExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 5;
     if (isOtpExpired) {
       res.status(403).json({
@@ -628,7 +628,7 @@ export const updateEmailVerifyController = asyncHandler(
         {
           errorCount: newErrorCount,
         },
-        { new: true }
+        { new: true },
       );
 
       res.status(400).json({
@@ -692,7 +692,7 @@ export const updateEmailVerifyController = asyncHandler(
       // },
       // token: newLoginToken,
     });
-  }
+  },
 );
 //@route POST | /api/v1/updateName
 // @desc login user update name
@@ -707,7 +707,7 @@ export const updateNameController = asyncHandler(
       message: "Name Updated Successfully",
       name: updatedUser?.name,
     });
-  }
+  },
 );
 
 //@route POST | /api/v1/updateName
@@ -724,14 +724,14 @@ export const updatePasswordController = asyncHandler(
 
     const isPasswordValid = await bcrypt.compare(
       old_password,
-      existUser.password
+      existUser.password,
     );
     if (!isPasswordValid) throw new Error("Password Invalid");
     existUser.password = new_password;
     await existUser.save();
 
     res.status(200).json({ message: "Password updated successfully." });
-  }
+  },
 );
 
 // @route POST | api/forgot-password
@@ -770,7 +770,7 @@ export const forgotPasswordController = asyncHandler(
     } else {
       // Check if OTP was requested on the same day
       const lastOtpRequest = new Date(
-        existEmail.updatedAt as unknown as string | number | Date
+        existEmail.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString();
       const currentDate = new Date().toLocaleDateString();
       const isSameDate = lastOtpRequest === currentDate;
@@ -842,11 +842,11 @@ export const forgotPasswordController = asyncHandler(
         });
       } else {
         throw new Error(
-          "Failed to send password reset email. Please try again."
+          "Failed to send password reset email. Please try again.",
         );
       }
     }
-  }
+  },
 );
 
 // @route POST | api/verify-otp
@@ -879,7 +879,7 @@ export const verifyOtpController = asyncHandler(
     // Check if OTP is from same date
     const isSameDate =
       new Date(
-        otpRow.updatedAt as unknown as string | number | Date
+        otpRow.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString() === new Date().toLocaleDateString();
 
     // Check error count limit
@@ -900,7 +900,7 @@ export const verifyOtpController = asyncHandler(
         {
           errorCount: 5,
         },
-        { new: true }
+        { new: true },
       );
       res.status(400).json({
         error: "Invalid token",
@@ -913,7 +913,7 @@ export const verifyOtpController = asyncHandler(
     const isOtpExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 1;
     if (isOtpExpired) {
       res.status(403).json({
@@ -933,7 +933,7 @@ export const verifyOtpController = asyncHandler(
         {
           errorCount: newErrorCount,
         },
-        { new: true }
+        { new: true },
       );
 
       res.status(400).json({
@@ -952,7 +952,7 @@ export const verifyOtpController = asyncHandler(
     res
       .status(200)
       .json({ message: "OTP verified successfully", token: newToken });
-  }
+  },
 );
 // @route POST | api/reset-password
 // desc verify Otp
@@ -1009,7 +1009,7 @@ export const resetPasswordController = asyncHandler(
     const isExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 10;
     if (isExpired) {
       res.status(403).json({
@@ -1031,5 +1031,153 @@ export const resetPasswordController = asyncHandler(
       message: "Password reset successfully",
       email: email,
     });
-  }
+  },
+);
+
+//@route GET | /api/v1/users
+// @desc Get users with filtering, sorting, and pagination
+// @access Private (Admin)
+export const getUsersWithFilter = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const {
+      keyword,
+      role,
+      sort_by = "createdAt",
+      sort_direction = "desc",
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    let query: any = {};
+
+    // Search by keyword (name or email)
+    //trim and check if not empty
+
+    if (keyword) {
+      query.$or = [
+        { name: { $regex: keyword.toString().trim(), $options: "i" } },
+        { email: { $regex: keyword.toString().trim(), $options: "i" } },
+      ];
+    }
+
+    // Filter by role
+    if (role) {
+      query.role = role;
+    }
+
+    // Sorting logic
+    let sort: any = {};
+    if (sort_by === "latest" || sort_by === "createdAt") {
+      sort.createdAt = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "name") {
+      sort.name = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "email") {
+      sort.email = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "role") {
+      sort.role = sort_direction === "asc" ? 1 : -1;
+    } else {
+      sort.createdAt = -1; // Default sort
+    }
+
+    // Pagination calculation
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Execute queries (excluding password field for security)
+    const users = await User.find(query)
+      .select("-password -confirmPassword")
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limitNum);
+
+    // Build base URL
+    const baseUrl = `${req.protocol}://${req.get("host")}${req.baseUrl}${
+      req.path
+    }`;
+
+    // Build query parameters without page
+    const buildQueryParams = (pageNumber: number = pageNum) => {
+      const params = new URLSearchParams();
+
+      if (keyword) params.append("keyword", keyword as string);
+      if (role) params.append("role", role as string);
+      if (sort_by) params.append("sort_by", sort_by as string);
+      if (sort_direction)
+        params.append("sort_direction", sort_direction as string);
+
+      params.append("limit", limitNum.toString());
+      params.append("page", pageNumber.toString());
+
+      return params.toString();
+    };
+
+    // Build links
+    const firstPageUrl = `${baseUrl}?${buildQueryParams(1)}`;
+    const lastPageUrl = `${baseUrl}?${buildQueryParams(totalPages)}`;
+    const prevPageUrl =
+      pageNum > 1 ? `${baseUrl}?${buildQueryParams(pageNum - 1)}` : null;
+    const nextPageUrl =
+      pageNum < totalPages
+        ? `${baseUrl}?${buildQueryParams(pageNum + 1)}`
+        : null;
+
+    // Build meta links for pagination
+    const metaLinks = [];
+
+    // Previous link
+    metaLinks.push({
+      url: prevPageUrl,
+      label: "&laquo; Previous",
+      active: false,
+    });
+
+    // Page number links (show ALL pages like in products)
+    for (let i = 1; i <= totalPages; i++) {
+      metaLinks.push({
+        url: `${baseUrl}?${buildQueryParams(i)}`,
+        label: i.toString(),
+        active: i === pageNum,
+      });
+    }
+
+    // Next link
+    metaLinks.push({
+      url: nextPageUrl,
+      label: "Next &raquo;",
+      active: false,
+    });
+
+    // Calculate from and to
+    const from = totalUsers > 0 ? (pageNum - 1) * limitNum + 1 : null;
+    const to = totalUsers > 0 ? Math.min(pageNum * limitNum, totalUsers) : null;
+
+    // Send response (EXACT SAME FORMAT AS PRODUCTS)
+    res.json({
+      data: users,
+      links: {
+        first: firstPageUrl,
+        last: lastPageUrl,
+        prev: prevPageUrl,
+        next: nextPageUrl,
+        totalUsers, // Changed from totalProducts
+        totalPages,
+        from,
+        to,
+      },
+      meta: {
+        current_page: pageNum,
+        from: from,
+        last_page: totalPages,
+        links: metaLinks,
+        path: baseUrl,
+        per_page: limitNum,
+        to: to,
+        total: totalUsers, // Changed from totalProducts
+      },
+    });
+  },
 );

@@ -13,6 +13,7 @@ import {
   resetPasswordController,
   verifyRegisterOtpController,
   updateEmailVerifyController,
+  getUsersWithFilter,
 } from "../controllers/user.controller";
 import {
   imageUploadValidation,
@@ -28,7 +29,7 @@ import {
   UpdateEmailOtpValidator,
 } from "../validators/userValidadator";
 import { validateRequest } from "../middlewares/validateRequest";
-import { protect } from "../middlewares/authMiddleware";
+import { isAdmin, protect } from "../middlewares/authMiddleware";
 import { upload } from "../utils/upload";
 
 const userRouter = Router();
@@ -38,13 +39,13 @@ userRouter.post(
   "/register",
   registerValidation,
   validateRequest,
-  registerController
+  registerController,
 );
 userRouter.post(
   "/verify-register-otp",
   verifyRegisterOtpValidation,
   validateRequest,
-  verifyRegisterOtpController
+  verifyRegisterOtpController,
 );
 userRouter.post("/login", loginValidation, validateRequest, loginController);
 userRouter.post("/logout", logoutController);
@@ -56,7 +57,7 @@ userRouter.patch(
   // validateRequest,
   upload.single("image"),
   protect,
-  profileUploadController
+  profileUploadController,
 );
 userRouter.get("/profile", protect, getUserProfileController);
 userRouter.post(
@@ -64,45 +65,46 @@ userRouter.post(
   updateEmailValidation,
   validateRequest,
   protect,
-  updateEmailController
+  updateEmailController,
 );
 userRouter.post(
   "/verify-update-email",
   UpdateEmailOtpValidator,
   validateRequest,
   protect,
-  updateEmailVerifyController
+  updateEmailVerifyController,
 );
 userRouter.post(
   "/updateName",
   updateNameValidation,
   validateRequest,
   protect,
-  updateNameController
+  updateNameController,
 );
 userRouter.post(
   "/updatePassword",
   updatePasswordValidation,
   validateRequest,
   protect,
-  updatePasswordController
+  updatePasswordController,
 );
 userRouter.post(
   "/forgot-password",
   forgotPasswordValidator,
   validateRequest,
-  forgotPasswordController
+  forgotPasswordController,
 );
 userRouter.post(
   "/verify-otp",
   verifyOtpValidator,
   validateRequest,
-  verifyOtpController
+  verifyOtpController,
 );
 userRouter.post(
   "/reset-password",
   resetPasswordValidator,
   validateRequest,
-  resetPasswordController
+  resetPasswordController,
 );
+userRouter.get("/users", protect, isAdmin, getUsersWithFilter);
 export default userRouter;

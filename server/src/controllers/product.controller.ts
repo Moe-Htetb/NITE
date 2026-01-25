@@ -447,7 +447,7 @@ export const getProductsWithFilter = asyncHandler(
 
     let query: any = {};
     if (keyword) {
-      query.name = { $regex: keyword, $options: "i" };
+      query.name = { $regex: keyword.toString().trim(), $options: "i" };
     }
     if (category) query.category = { $regex: category, $options: "i" };
     if (minPrice || maxPrice) {

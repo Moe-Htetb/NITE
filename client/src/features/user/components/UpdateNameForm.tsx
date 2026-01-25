@@ -15,7 +15,7 @@ import { selectAuthInfo, updateAuthInfo } from "@/store/authSlice";
 import type { NameUpdateFormData } from "@/types/formInputs";
 import { nameUpdateSchema } from "@/schema/user";
 import { useUpdateUserNameMutation } from "@/store/rtk/userApi";
-import { useAppDispatch } from "@/types/product";
+import { useAppDispatch } from "@/types/useRedux";
 
 const UpdateNameForm = () => {
   const userInfo = useAppSelector(selectAuthInfo);
@@ -54,7 +54,7 @@ const UpdateNameForm = () => {
     } catch (error: any) {
       console.error("Update failed:", error);
       toast.error(
-        error?.data?.message || "Failed to update name. Please try again."
+        error?.data?.message || "Failed to update name. Please try again.",
       );
     }
   };
