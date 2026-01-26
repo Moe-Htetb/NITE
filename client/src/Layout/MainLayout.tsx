@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import PageLoading from "../components/PageLoading";
 import Header from "../features/Home/components/Header";
 import Footer from "../features/Home/components/Footer";
+import CartSidebar from "../features/Home/components/CartSidebar";
 
 const MainLayout = () => {
   return (
@@ -13,6 +14,7 @@ const MainLayout = () => {
         <Outlet />
       </Suspense>
       <Footer />
+      <CartSidebar />
     </div>
   );
 };

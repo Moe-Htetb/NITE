@@ -60,6 +60,8 @@ export interface ProductsFilterParams {
   maxPrice?: number;
   color?: string | string[];
   size?: string | string[];
+  is_feature?: boolean | string;
+  is_new_arrival?: boolean | string;
   sort_by?: string;
   sort_direction?: string;
   page?: number;

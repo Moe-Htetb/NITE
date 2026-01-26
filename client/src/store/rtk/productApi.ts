@@ -5,8 +5,25 @@ import type {
   ProductsFilterParams,
   ProductsResponse,
   UpdateProductResponse,
+  Product,
 } from "@/types/product";
 import { apiSlice } from "./rtk";
+
+export interface ProductMetaResponse {
+  colors: string[];
+  sizes: string[];
+  category: string[];
+  minPrice: number;
+  maxPrice: number;
+}
+
+export interface FeaturedProductsResponse {
+  product: Product[];
+}
+
+export interface NewProductsResponse {
+  product: Product[];
+}
 
 export const productApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -51,6 +68,27 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["product"],
     }),
+    getProductMeta: builder.query<ProductMetaResponse, void>({
+      query: () => ({
+        url: "/product/meta",
+        method: "GET",
+      }),
+      providesTags: ["product"],
+    }),
+    getFeaturedProducts: builder.query<FeaturedProductsResponse, void>({
+      query: () => ({
+        url: "/product/feature",
+        method: "GET",
+      }),
+      providesTags: ["product"],
+    }),
+    getNewProducts: builder.query<NewProductsResponse, void>({
+      query: () => ({
+        url: "/product/new",
+        method: "GET",
+      }),
+      providesTags: ["product"],
+    }),
   }),
 });
 
@@ -60,4 +98,7 @@ export const {
   useCreateProductMutation,
   useGetProductByIdQuery,
   useUpdateProductMutation,
+  useGetProductMetaQuery,
+  useGetFeaturedProductsQuery,
+  useGetNewProductsQuery,
 } = productApiSlice;

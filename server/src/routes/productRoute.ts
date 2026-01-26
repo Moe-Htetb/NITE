@@ -26,8 +26,8 @@ productRouter.post(
   "/product/create",
   protect,
   isAdmin,
-  createProductValidator,
-  validateRequest,
+  // createProductValidator,
+  // validateRequest,
   upload.array("images", 10),
   createProductController,
 );

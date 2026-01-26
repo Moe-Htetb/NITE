@@ -439,6 +439,8 @@ export const getProductsWithFilter = asyncHandler(
       maxPrice,
       color,
       size,
+      is_feature,
+      is_new_arrival,
       sort_by = "createdAt",
       sort_direction = "desc",
       page = 1,
@@ -467,6 +469,24 @@ export const getProductsWithFilter = asyncHandler(
       query.sizes = {
         $in: sizeArray.map((s) => (s as string).toUpperCase()),
       };
+    }
+
+    // Filter by is_feature
+    if (is_feature !== undefined && is_feature !== null && is_feature !== "") {
+      query.is_feature =
+        is_feature === "true" || is_feature === true || is_feature === "1";
+    }
+
+    // Filter by is_new_arrival
+    if (
+      is_new_arrival !== undefined &&
+      is_new_arrival !== null &&
+      is_new_arrival !== ""
+    ) {
+      query.is_new_arrival =
+        is_new_arrival === "true" ||
+        is_new_arrival === true ||
+        is_new_arrival === "1";
     }
 
     // Sorting logic

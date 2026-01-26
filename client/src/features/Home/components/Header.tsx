@@ -51,10 +51,14 @@ import {
 import { useLogoutMutation } from "@/store/rtk/authApi";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { useGetProductMetaQuery } from "@/store/rtk/productApi";
+import { selectCartCount, toggleCart } from "@/store/cartSlice";
 
 const Header = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { data: metaData } = useGetProductMetaQuery();
+  const cartCount = useAppSelector(selectCartCount);
   const [userMenu, setUserMenu] = useState([
     { name: "My Profile", icon: User, onClick: () => navigate("/profile") },
     { name: "Orders", icon: Package, onClick: () => navigate("/orders") },
@@ -63,6 +67,10 @@ const Header = () => {
   ]);
 
   const authInfo = useAppSelector(selectAuthInfo);
+  
+  const handleCategoryClick = (category: string) => {
+    navigate(`/products?category=${encodeURIComponent(category)}`);
+  };
 
   useEffect(() => {
     if (authInfo?.role === "admin") {
@@ -102,29 +110,20 @@ const Header = () => {
     },
   ] = useLogoutMutation();
 
-  const categories = [
-    {
-      name: "Outdoor Gear",
-      items: [
-        "Backpacks",
-        "Tents & Shelters",
-        "Sleeping Bags",
-        "Camping Furniture",
-      ],
-    },
-    {
-      name: "Hiking & Trekking",
-      items: ["Hiking Boots", "Trekking Poles", "Navigation", "Hydration"],
-    },
-    {
-      name: "Clothing",
-      items: ["Jackets & Vests", "Base Layers", "Hiking Pants", "Footwear"],
-    },
-    {
-      name: "Accessories",
-      items: ["Headlamps", "Water Bottles", "Multi-tools", "First Aid"],
-    },
-  ];
+  // Use categories from API or fallback to default
+  const categories = metaData?.category && metaData.category.length > 0
+    ? [
+        {
+          name: "All Categories",
+          items: metaData.category,
+        },
+      ]
+    : [
+        {
+          name: "Categories",
+          items: ["Clothing", "Electronics", "Home & Garden", "Sports", "Books", "Toys"],
+        },
+      ];
 
   const handleSignOut = async () => {
     try {
@@ -171,10 +170,10 @@ const Header = () => {
         {/* Logo */}
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black">
               <span className="text-lg font-bold text-white">W</span>
             </div>
-            <span className="text-2xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold text-black">
               WanderShop
             </span>
           </Link>
@@ -211,14 +210,14 @@ const Header = () => {
                           {category.items.map((item) => (
                             <li key={item}>
                               <NavigationMenuLink asChild>
-                                <a
-                                  href="#"
-                                  className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                <button
+                                  onClick={() => handleCategoryClick(item)}
+                                  className="block w-full text-left select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                 >
                                   <div className="text-sm font-medium leading-none">
                                     {item}
                                   </div>
-                                </a>
+                                </button>
                               </NavigationMenuLink>
                             </li>
                           ))}
@@ -234,11 +233,18 @@ const Header = () => {
 
         {/* Desktop Search and Actions */}
         <div className="hidden lg:flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => dispatch(toggleCart())}
+          >
             <ShoppingCart className="h-5 w-5" />
-            <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-linear-to-r from-emerald-500 to-cyan-500">
-              3
-            </Badge>
+            {cartCount > 0 && (
+              <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-black text-white">
+                {cartCount}
+              </Badge>
+            )}
           </Button>
           {/* User Account */}
           {authInfo ? (
@@ -297,11 +303,18 @@ const Header = () => {
 
         {/* Mobile Menu */}
         <div className="flex lg:hidden items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => dispatch(toggleCart())}
+          >
             <ShoppingCart className="h-5 w-5" />
-            <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-linear-to-r from-emerald-500 to-cyan-500">
-              3
-            </Badge>
+            {cartCount > 0 && (
+              <Badge className="absolute -right-1 -top-1 h-5 w-5 justify-center rounded-full p-0 text-xs bg-black text-white">
+                {cartCount}
+              </Badge>
+            )}
           </Button>
 
           <Sheet>
@@ -314,10 +327,10 @@ const Header = () => {
               <SheetHeader>
                 <SheetTitle className="text-left">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black">
                       <span className="text-lg font-bold text-white">W</span>
                     </div>
-                    <span className="text-xl font-bold bg-linear-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                    <span className="text-xl font-bold text-black">
                       WanderShop
                     </span>
                   </div>
@@ -351,9 +364,9 @@ const Header = () => {
                                 key={item}
                                 variant="ghost"
                                 className="w-full justify-start text-sm"
-                                asChild
+                                onClick={() => handleCategoryClick(item)}
                               >
-                                <a href="#">{item}</a>
+                                {item}
                               </Button>
                             )),
                           )}
@@ -370,7 +383,7 @@ const Header = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-linear-to-br from-emerald-500 to-cyan-500 text-white">
+                        <AvatarFallback className="bg-black text-white">
                           {getInitials(authInfo.name)}
                         </AvatarFallback>
                       </Avatar>
