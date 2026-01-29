@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { useGetProductsQuery } from "@/store/rtk/productApi";
-import { useAppDispatch } from "@/types/useRedux";
-import { addToCart } from "@/store/cartSlice";
-import type { Product } from "@/types/product";
-import { ShoppingCart, Filter, X } from "lucide-react";
+import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   const category = searchParams.get("category") || "";
   const keyword = searchParams.get("keyword") || "";
@@ -56,16 +51,6 @@ const ProductsPage = () => {
     params.set("sort_by", newSort);
     params.set("page", "1");
     setSearchParams(params);
-  };
-
-  const handleAddToCart = (product: Product) => {
-    dispatch(
-      addToCart({
-        product,
-        quantity: 1,
-      })
-    );
-    toast.success(`${product.name} added to cart!`);
   };
 
   const handleProductClick = (productId: string) => {
@@ -113,7 +98,9 @@ const ProductsPage = () => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </Button>
-              {(category || isFeature === "true" || isNewArrival === "true") && (
+              {(category ||
+                isFeature === "true" ||
+                isNewArrival === "true") && (
                 <Button
                   variant="outline"
                   className="border-2 border-black text-black hover:bg-gray-100"
@@ -270,15 +257,8 @@ const ProductsPage = () => {
                       <span className="text-2xl font-bold text-black">
                         ${product.price.toFixed(2)}
                       </span>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(product);
-                        }}
-                        className="bg-black text-white hover:bg-gray-900 flex items-center space-x-2"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Add</span>
+                      <Button className="bg-black text-white hover:bg-gray-900 flex items-center space-x-2">
+                        <span>See Details</span>
                       </Button>
                     </div>
                   </div>
@@ -287,7 +267,7 @@ const ProductsPage = () => {
             </div>
 
             {/* Pagination */}
-            {data.meta && data.meta.totalPages > 1 && (
+            {data.meta && data.links.totalPages > 1 && (
               <div className="flex justify-center items-center gap-2">
                 <Button
                   variant="outline"
@@ -302,12 +282,12 @@ const ProductsPage = () => {
                   Previous
                 </Button>
                 <span className="text-gray-700 px-4">
-                  Page {page} of {data.meta.totalPages}
+                  Page {page} of {data.links.totalPages}
                 </span>
                 <Button
                   variant="outline"
                   className="border-2 border-black text-black"
-                  disabled={page >= data.meta.totalPages}
+                  disabled={page >= data.links.totalPages}
                   onClick={() => {
                     const params = new URLSearchParams(searchParams);
                     params.set("page", (page + 1).toString());

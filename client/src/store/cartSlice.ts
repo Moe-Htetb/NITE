@@ -44,18 +44,35 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action: PayloadAction<CartItem>) => {
       const { product, quantity, selectedSize, selectedColor } = action.payload;
-      
+
+      // Check if product is in stock
+      if (product.instock_count === 0) {
+        return; // Don't add out-of-stock products
+      }
+
+      // Check if quantity exceeds available stock
+      if (quantity > product.instock_count) {
+        return; // Don't add if quantity exceeds stock
+      }
+
       // Check if item already exists with same size and color
       const existingItemIndex = state.items.findIndex(
         (item) =>
           item.product._id === product._id &&
           item.selectedSize === selectedSize &&
-          item.selectedColor === selectedColor
+          item.selectedColor === selectedColor,
       );
 
       if (existingItemIndex >= 0) {
-        // Update quantity if item exists
-        state.items[existingItemIndex].quantity += quantity;
+        const existingItem = state.items[existingItemIndex];
+        const newTotalQuantity = existingItem.quantity + quantity;
+
+        // Check if total exceeds available stock
+        if (newTotalQuantity <= product.instock_count) {
+          // Update quantity if item exists and within stock limits
+          state.items[existingItemIndex].quantity = newTotalQuantity;
+        }
+        // If exceeds stock, don't add more (could show toast here)
       } else {
         // Add new item
         state.items.push({
@@ -69,23 +86,43 @@ const cartSlice = createSlice({
       saveCartToStorage(state.items);
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((item) => item.product._id !== action.payload);
+      state.items = state.items.filter(
+        (item) => item.product._id !== action.payload,
+      );
       saveCartToStorage(state.items);
     },
     updateQuantity: (
       state,
-      action: PayloadAction<{ productId: string; quantity: number }>
+      action: PayloadAction<{
+        productId: string;
+        quantity: number;
+        selectedSize?: string;
+        selectedColor?: string;
+      }>,
     ) => {
+      const { productId, quantity, selectedSize, selectedColor } =
+        action.payload;
       const item = state.items.find(
-        (item) => item.product._id === action.payload.productId
+        (item) =>
+          item.product._id === productId &&
+          item.selectedSize === selectedSize &&
+          item.selectedColor === selectedColor,
       );
+
       if (item) {
-        if (action.payload.quantity <= 0) {
+        // Validate quantity against stock
+        if (quantity <= 0) {
           state.items = state.items.filter(
-            (item) => item.product._id !== action.payload.productId
+            (cartItem) =>
+              !(
+                cartItem.product._id === productId &&
+                cartItem.selectedSize === selectedSize &&
+                cartItem.selectedColor === selectedColor
+              ),
           );
-        } else {
-          item.quantity = action.payload.quantity;
+        } else if (quantity <= item.product.instock_count) {
+          // Only update if quantity doesn't exceed stock
+          item.quantity = quantity;
         }
         saveCartToStorage(state.items);
       }
@@ -125,6 +162,23 @@ export const selectCartTotal = (state: { cart: CartState }) => {
 export const selectCartCount = (state: { cart: CartState }) => {
   return state.cart.items.reduce((count, item) => count + item.quantity, 0);
 };
-export const selectIsCartOpen = (state: { cart: CartState }) => state.cart.isOpen;
+export const selectIsCartOpen = (state: { cart: CartState }) =>
+  state.cart.isOpen;
+
+// Selector to get cart quantity for specific product variant
+export const selectCartQuantityForVariant = (
+  state: { cart: CartState },
+  productId: string,
+  selectedSize?: string,
+  selectedColor?: string,
+) => {
+  const item = state.cart.items.find(
+    (item) =>
+      item.product._id === productId &&
+      item.selectedSize === selectedSize &&
+      item.selectedColor === selectedColor,
+  );
+  return item ? item.quantity : 0;
+};
 
 export default cartSlice.reducer;

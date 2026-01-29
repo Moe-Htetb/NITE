@@ -1,16 +1,17 @@
 import { useParams, useNavigate } from "react-router";
 import { useGetProductByIdQuery } from "@/store/rtk/productApi";
-import { useAppDispatch } from "@/types/useRedux";
-import { addToCart } from "@/store/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/types/useRedux";
+import { addToCart, selectCartItems } from "@/store/cartSlice";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const cartItems = useAppSelector(selectCartItems);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -18,8 +19,48 @@ const ProductDetailPage = () => {
 
   const { data, isLoading, error } = useGetProductByIdQuery(id || "");
 
+  // Calculate how many items are already in cart for this product (with same size/color)
+  const getCartQuantityForProduct = () => {
+    if (!data?.product) return 0;
+
+    const existingItem = cartItems.find(
+      (item) =>
+        item.product._id === data.product._id &&
+        item.selectedSize === selectedSize &&
+        item.selectedColor === selectedColor,
+    );
+
+    return existingItem ? existingItem.quantity : 0;
+  };
+
+  // Calculate max quantity user can add
+  const getMaxQuantity = () => {
+    if (!data?.product) return 0;
+    const inCart = getCartQuantityForProduct();
+    return Math.max(0, data.product.instock_count - inCart);
+  };
+
   const handleAddToCart = () => {
     if (!data?.product) return;
+
+    // Check if product is in stock
+    if (data.product.instock_count === 0) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
+    // Check if quantity is valid
+    if (quantity <= 0) {
+      toast.error("Please select a valid quantity");
+      return;
+    }
+
+    // Check if quantity exceeds available stock
+    const maxQuantity = getMaxQuantity();
+    if (quantity > maxQuantity) {
+      toast.error(`Only ${maxQuantity} more items available`);
+      return;
+    }
 
     if (data.product.sizes.length > 0 && !selectedSize) {
       toast.error("Please select a size");
@@ -37,10 +78,33 @@ const ProductDetailPage = () => {
         quantity,
         selectedSize: selectedSize || undefined,
         selectedColor: selectedColor || undefined,
-      })
+      }),
     );
     toast.success(`${data.product.name} added to cart!`);
   };
+
+  // Reset quantity when product changes
+  useEffect(() => {
+    if (data?.product) {
+      setQuantity(1);
+      // Set default size if available
+      if (data.product.sizes.length > 0 && !selectedSize) {
+        setSelectedSize(data.product.sizes[0]);
+      }
+      // Set default color if available
+      if (data.product.colors.length > 0 && !selectedColor) {
+        setSelectedColor(data.product.colors[0]);
+      }
+    }
+  }, [data?.product]);
+
+  // Update quantity when selected size/color changes
+  useEffect(() => {
+    const maxQty = getMaxQuantity();
+    if (quantity > maxQty) {
+      setQuantity(Math.max(1, maxQty));
+    }
+  }, [selectedSize, selectedColor, data?.product]);
 
   if (isLoading) {
     return (
@@ -74,6 +138,8 @@ const ProductDetailPage = () => {
   }
 
   const product = data.product;
+  const maxQuantity = getMaxQuantity();
+  const cartQuantity = getCartQuantityForProduct();
 
   return (
     <div className="min-h-screen bg-white">
@@ -95,7 +161,10 @@ const ProductDetailPage = () => {
             <div className="aspect-square bg-gray-50 rounded-2xl border-2 border-gray-200 overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <img
-                  src={product.images[selectedImageIndex]?.url || product.images[0].url}
+                  src={
+                    product.images[selectedImageIndex]?.url ||
+                    product.images[0].url
+                  }
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -122,7 +191,9 @@ const ProductDetailPage = () => {
                       src={image.url}
                       alt={`${product.name} ${index + 1}`}
                       className={`w-full h-full object-cover ${
-                        selectedImageIndex === index ? "opacity-100" : "opacity-70 hover:opacity-100"
+                        selectedImageIndex === index
+                          ? "opacity-100"
+                          : "opacity-70 hover:opacity-100"
                       } transition-opacity`}
                     />
                   </button>
@@ -166,7 +237,9 @@ const ProductDetailPage = () => {
                     </span>
                   ))}
                 </div>
-                <span className="text-gray-600">({product.rating_count.toFixed(1)})</span>
+                <span className="text-gray-600">
+                  ({product.rating_count.toFixed(1)})
+                </span>
               </div>
             )}
 
@@ -177,8 +250,12 @@ const ProductDetailPage = () => {
 
             {/* Description */}
             <div>
-              <h3 className="text-lg font-semibold text-black mb-2">Description</h3>
-              <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              <h3 className="text-lg font-semibold text-black mb-2">
+                Description
+              </h3>
+              <p className="text-gray-700 leading-relaxed">
+                {product.description}
+              </p>
             </div>
 
             {/* Sizes */}
@@ -233,7 +310,9 @@ const ProductDetailPage = () => {
 
             {/* Quantity */}
             <div>
-              <h3 className="text-lg font-semibold text-black mb-3">Quantity</h3>
+              <h3 className="text-lg font-semibold text-black mb-3">
+                Quantity
+              </h3>
               <div className="flex items-center gap-4">
                 <div className="flex items-center border-2 border-gray-300 rounded-lg">
                   <Button
@@ -241,50 +320,79 @@ const ProductDetailPage = () => {
                     size="icon"
                     className="h-12 w-12 rounded-none"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="px-6 py-2 text-black font-medium text-lg min-w-[4rem] text-center">
+                  <span className="px-6 py-2 text-black font-medium text-lg min-w-16 text-center">
                     {quantity}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-12 w-12 rounded-none"
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() =>
+                      setQuantity(Math.min(maxQuantity, quantity + 1))
+                    }
+                    disabled={quantity >= maxQuantity}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <span className="text-gray-600">
-                  {product.instock_count > 0
-                    ? `${product.instock_count} in stock`
-                    : "Out of stock"}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-gray-600">
+                    {product.instock_count > 0
+                      ? `${product.instock_count} in stock`
+                      : "Out of stock"}
+                  </span>
+                  {cartQuantity > 0 && (
+                    <span className="text-sm text-gray-500">
+                      {cartQuantity} already in cart
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {/* Stock warning */}
+              {maxQuantity === 0 && product.instock_count > 0 && (
+                <p className="text-red-600 text-sm mt-2">
+                  You have all available items in your cart
+                </p>
+              )}
+              {maxQuantity > 0 && quantity > maxQuantity && (
+                <p className="text-red-600 text-sm mt-2">
+                  Maximum available quantity is {maxQuantity}
+                </p>
+              )}
             </div>
 
             {/* Add to Cart Button */}
             <div className="flex gap-4 pt-4">
               <Button
                 onClick={handleAddToCart}
-                disabled={product.instock_count === 0}
-                className="flex-1 bg-black text-white hover:bg-gray-900 h-14 text-lg"
+                disabled={product.instock_count === 0 || maxQuantity === 0}
+                className="flex-1 bg-black text-white hover:bg-gray-900 h-14 text-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart
+                {maxQuantity === 0 && product.instock_count > 0
+                  ? "All in Cart"
+                  : "Add to Cart"}
               </Button>
             </div>
 
             {/* Product Details */}
             <div className="pt-6 border-t-2 border-gray-200">
-              <h3 className="text-lg font-semibold text-black mb-3">Product Details</h3>
+              <h3 className="text-lg font-semibold text-black mb-3">
+                Product Details
+              </h3>
               <div className="space-y-2 text-gray-700">
                 <p>
-                  <span className="font-medium">Category:</span> {product.category}
+                  <span className="font-medium">Category:</span>{" "}
+                  {product.category}
                 </p>
                 <p>
-                  <span className="font-medium">Stock:</span> {product.instock_count} units
+                  <span className="font-medium">Stock:</span>{" "}
+                  {product.instock_count} units
                 </p>
                 {product.sizes && product.sizes.length > 0 && (
                   <p>

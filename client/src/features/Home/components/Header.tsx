@@ -67,7 +67,7 @@ const Header = () => {
   ]);
 
   const authInfo = useAppSelector(selectAuthInfo);
-  
+
   const handleCategoryClick = (category: string) => {
     navigate(`/products?category=${encodeURIComponent(category)}`);
   };
@@ -111,19 +111,27 @@ const Header = () => {
   ] = useLogoutMutation();
 
   // Use categories from API or fallback to default
-  const categories = metaData?.category && metaData.category.length > 0
-    ? [
-        {
-          name: "All Categories",
-          items: metaData.category,
-        },
-      ]
-    : [
-        {
-          name: "Categories",
-          items: ["Clothing", "Electronics", "Home & Garden", "Sports", "Books", "Toys"],
-        },
-      ];
+  const categories =
+    metaData?.category && metaData.category.length > 0
+      ? [
+          {
+            name: "All Categories",
+            items: metaData.category,
+          },
+        ]
+      : [
+          {
+            name: "Categories",
+            items: [
+              "Clothing",
+              "Electronics",
+              "Home & Garden",
+              "Sports",
+              "Books",
+              "Toys",
+            ],
+          },
+        ];
 
   const handleSignOut = async () => {
     try {
@@ -166,16 +174,14 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className="container  flex h-16 items-center mx-auto justify-between px-20">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black">
               <span className="text-lg font-bold text-white">W</span>
             </div>
-            <span className="text-2xl font-bold text-black">
-              WanderShop
-            </span>
+            <span className="text-2xl font-bold text-black">WanderShop</span>
           </Link>
         </div>
 

@@ -3,14 +3,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useGetProductsQuery } from "@/store/rtk/productApi";
 import type { Product } from "@/types/product";
-import { ShoppingCart } from "lucide-react";
-import { toast } from "sonner";
-import { useAppDispatch } from "@/types/useRedux";
-import { addToCart } from "@/store/cartSlice";
 
 const ProductShowcase = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+
   const [activeTab, setActiveTab] = useState<"featured" | "new">("featured");
 
   const { data, isLoading: isLoading } = useGetProductsQuery({
@@ -19,17 +15,6 @@ const ProductShowcase = () => {
   });
   const featuredData = data?.data.filter((product) => product.is_feature);
   const newData = data?.data.filter((product) => product.is_new_arrival);
-  console.log(newData);
-
-  const handleAddToCart = (product: Product) => {
-    dispatch(
-      addToCart({
-        product,
-        quantity: 1,
-      }),
-    );
-    toast.success(`${product.name} added to cart!`);
-  };
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
@@ -107,7 +92,7 @@ const ProductShowcase = () => {
                 {/* Product Image/Badge */}
                 <div className="relative p-6 bg-gray-50">
                   {getBadgeText(product) && (
-                    <div className="absolute top-4 left-4 z-10">
+                    <div className="absolute top-1 left-4 z-10">
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-black text-white">
                         {getBadgeText(product)}
                       </span>
@@ -115,7 +100,7 @@ const ProductShowcase = () => {
                   )}
 
                   {/* Product Image */}
-                  <div className="w-full h-48 flex items-center justify-center overflow-hidden bg-white rounded-lg">
+                  <div className="w-full h-48 flex items-center justify-center overflow-hidden mt-3 bg-white rounded-lg">
                     {product.images && product.images.length > 0 ? (
                       <img
                         src={product.images[0].url}
@@ -127,13 +112,6 @@ const ProductShowcase = () => {
                         📦
                       </div>
                     )}
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-300 border border-gray-300">
-                      ❤️
-                    </button>
                   </div>
                 </div>
 
@@ -177,14 +155,14 @@ const ProductShowcase = () => {
                       </span>
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(product);
-                      }}
+                      // onClick={(e) => {
+                      //   e.stopPropagation();
+                      //   handleAddToCart(product);
+                      // }}
                       className="bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-900 transition-colors duration-300 transform group-hover:scale-105 flex items-center space-x-2 border-2 border-black"
                     >
-                      <ShoppingCart className="w-4 h-4" />
-                      <span>Add</span>
+                      {/* <ShoppingCart className="w-4 h-4" /> */}
+                      <span>See Detail</span>
                     </button>
                   </div>
 
@@ -197,7 +175,7 @@ const ProductShowcase = () => {
                 </div>
 
                 {/* Hover Effect Border */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-black rounded-2xl pointer-events-none transition-all duration-500"></div>
+                {/* <div className="absolute inset-0 border-2 border-transparent group-hover:border-black rounded-2xl pointer-events-none transition-all duration-500"></div> */}
               </div>
             ))}
           </div>
