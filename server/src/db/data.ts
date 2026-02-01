@@ -448,3 +448,246 @@ export const products = [
     updatedAt: new Date(),
   },
 ];
+
+export const users = [
+  {
+    name: "John Doe",
+    email: "santr1@gmail.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/johndoe.jpg",
+        public_alt: "John Doe Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Emma Watson",
+    email: "emma.watson@yahoo.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/emmawatson.jpg",
+        public_alt: "Emma Watson Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Michael Chen",
+    email: "michael.chen@outlook.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/michaelchen.jpg",
+        public_alt: "Michael Chen Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Sarah Johnson",
+    email: "sarahj@protonmail.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/sarahjohnson.jpg",
+        public_alt: "Sarah Johnson Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "David Rodriguez",
+    email: "drodriguez87@hotmail.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/davidrodriguez.jpg",
+        public_alt: "David Rodriguez Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Lisa Park",
+    email: "lisa.park@icloud.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/lisapark.jpg",
+        public_alt: "Lisa Park Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "James Wilson",
+    email: "jwilson.dev@gmail.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/jameswilson.jpg",
+        public_alt: "James Wilson Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Maria Garcia",
+    email: "maria.garcia@company.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/mariagarcia.jpg",
+        public_alt: "Maria Garcia Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Robert Kim",
+    email: "robert.kim@startup.io",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/robertkim.jpg",
+        public_alt: "Robert Kim Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Jennifer Lee",
+    email: "jennifer.lee@university.edu",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/jenniferlee.jpg",
+        public_alt: "Jennifer Lee Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Thomas Anderson",
+    email: "thomas.anderson@matrix.net",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/thomasanderson.jpg",
+        public_alt: "Thomas Anderson Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Amanda Scott",
+    email: "amanda.scott@design.co",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/amandascott.jpg",
+        public_alt: "Amanda Scott Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Kevin Patel",
+    email: "kpatel.med@hospital.org",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/kevinpatel.jpg",
+        public_alt: "Kevin Patel Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Olivia Martinez",
+    email: "olivia.mtz@consulting.biz",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/oliviamartinez.jpg",
+        public_alt: "Olivia Martinez Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Daniel Brown",
+    email: "daniel.brown@tech.com",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/danielbrown.jpg",
+        public_alt: "Daniel Brown Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    name: "Sophia Williams",
+    email: "sophia.w@research.edu",
+    password: "asdffdsa",
+    role: "user",
+    profile: [
+      {
+        url: "https://example.com/profiles/sophiawilliams.jpg",
+        public_alt: "Sophia Williams Profile",
+        _id: new mongoose.Types.ObjectId(),
+      },
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];

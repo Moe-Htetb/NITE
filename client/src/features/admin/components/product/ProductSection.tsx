@@ -82,7 +82,7 @@ const ProductSection = () => {
       setSearchQuery(value);
       setCurrentPage(1);
     }
-  }, 3000);
+  }, 500);
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -90,22 +90,19 @@ const ProductSection = () => {
     debouncedSearch(value);
   };
 
-  // Clear search function
   const handleClearSearch = () => {
     setSearchInput("");
     setSearchQuery("");
     setCurrentPage(1);
-    debouncedSearch.cancel(); // Cancel any pending debounce
+    debouncedSearch.cancel();
   };
 
-  // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       debouncedSearch.cancel();
     };
   }, []);
 
-  // RTK Query hooks
   const {
     data: productsData,
     isLoading,
@@ -159,6 +156,16 @@ const ProductSection = () => {
     </div>
   );
 
+  // Safe access to pagination data
+
+  const paginationLinks = productsData?.meta?.links || [];
+  const totalProducts = productsData?.meta?.total || 0;
+  const lastPage = productsData?.meta?.last_page || 1;
+  const from = productsData?.meta?.from || 0;
+  const to = productsData?.meta?.to || 0;
+  const hasPrevPage = !!productsData?.links?.prev;
+  const hasNextPage = !!productsData?.links?.next;
+
   return (
     <div className="bg-white p-6 space-y-6">
       <BreadCrumb currentPageTitle="Products" />
@@ -193,7 +200,6 @@ const ProductSection = () => {
         </div>
 
         <div className="flex items-center gap-4 w-full sm:w-auto">
-          {/* Sort Dropdown */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Sort by:</span>
             <Select
@@ -235,8 +241,7 @@ const ProductSection = () => {
           </CardTitle>
           {productsData && (
             <div className="text-sm text-gray-600">
-              Showing {productsData.meta.from || 0} to{" "}
-              {productsData.meta.to || 0} of {productsData.meta.total} products
+              Showing {from} to {to} of {totalProducts} products
             </div>
           )}
         </CardHeader>
@@ -257,7 +262,7 @@ const ProductSection = () => {
                 Retry
               </Button>
             </div>
-          ) : productsData?.data.length === 0 ? (
+          ) : productsData?.data?.length === 0 ? (
             <div className="py-12 text-center">
               <div className="flex flex-col items-center space-y-3">
                 <Package className="h-12 w-12 text-gray-400" />
@@ -306,14 +311,14 @@ const ProductSection = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {productsData?.data.map((product) => (
+                    {productsData?.data?.map((product) => (
                       <ProductRow key={product._id} product={product} />
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {productsData && productsData.meta.total > 0 && (
+              {productsData && totalProducts > 0 && (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-gray-200">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <span>Show</span>
@@ -336,11 +341,7 @@ const ProductSection = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={
-                        !productsData.links.prev ||
-                        currentPage === 1 ||
-                        isFetching
-                      }
+                      disabled={!hasPrevPage || currentPage === 1 || isFetching}
                       className="border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -348,8 +349,9 @@ const ProductSection = () => {
                     </Button>
 
                     <div className="flex items-center space-x-1">
-                      {productsData.meta.links
+                      {paginationLinks
                         .filter((link) => {
+                          if (!link || !link.label) return false;
                           if (
                             link.label.includes("Previous") ||
                             link.label.includes("Next")
@@ -360,7 +362,7 @@ const ProductSection = () => {
                           if (isNaN(pageNum)) return false;
                           return (
                             pageNum === 1 ||
-                            pageNum === productsData.meta.last_page ||
+                            pageNum === lastPage ||
                             Math.abs(pageNum - currentPage) <= 1
                           );
                         })
@@ -399,9 +401,7 @@ const ProductSection = () => {
                       size="sm"
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={
-                        !productsData.links.next ||
-                        currentPage === productsData.meta.last_page ||
-                        isFetching
+                        !hasNextPage || currentPage === lastPage || isFetching
                       }
                       className="border-gray-300 text-black hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >

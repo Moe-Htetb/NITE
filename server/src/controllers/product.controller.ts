@@ -430,6 +430,7 @@ export const getNewProductController = asyncHandler(
 // @route GET | api/products/keyword={name}
 // @desc Get all filter products.
 // @access Public
+
 export const getProductsWithFilter = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const {
@@ -444,63 +445,80 @@ export const getProductsWithFilter = asyncHandler(
       sort_by = "createdAt",
       sort_direction = "desc",
       page = 1,
-      limit = 5,
+      limit = 12,
     } = req.query;
 
     let query: any = {};
+
+    // Search by keyword (name, description, or category)
     if (keyword) {
-      query.name = { $regex: keyword.toString().trim(), $options: "i" };
+      const keywordStr = keyword.toString().trim();
+      if (keywordStr) {
+        query.$or = [
+          { name: { $regex: keywordStr, $options: "i" } },
+          { description: { $regex: keywordStr, $options: "i" } },
+          { category: { $regex: keywordStr, $options: "i" } },
+        ];
+      }
     }
-    if (category) query.category = { $regex: category, $options: "i" };
+
+    // Category filter
+    if (category) {
+      query.category = { $regex: category.toString(), $options: "i" };
+    }
+
+    // Price range filter
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
+
+    // Color filter (multiple colors)
     if (color) {
-      const colorArray = Array.isArray(color) ? color : [color];
-      query.colors = {
-        $in: colorArray.map((c) => new RegExp(c as string, "i")),
-      };
+      const colorArray = Array.isArray(color)
+        ? color.map((c) => new RegExp(`^${c.toString().trim()}$`, "i"))
+        : [new RegExp(`^${color.toString().trim()}$`, "i")];
+
+      query.colors = { $in: colorArray };
     }
 
+    // Size filter (multiple sizes)
     if (size) {
-      const sizeArray = Array.isArray(size) ? size : [size];
-      query.sizes = {
-        $in: sizeArray.map((s) => (s as string).toUpperCase()),
-      };
+      const sizeArray = Array.isArray(size)
+        ? size.map((s) => s.toString().toUpperCase().trim())
+        : [size.toString().toUpperCase().trim()];
+
+      query.sizes = { $in: sizeArray };
     }
 
-    // Filter by is_feature
+    // Feature filter
     if (is_feature !== undefined && is_feature !== null && is_feature !== "") {
-      query.is_feature =
-        is_feature === "true" || is_feature === true || is_feature === "1";
+      query.is_feature = is_feature === "true" || is_feature === "1";
     }
 
-    // Filter by is_new_arrival
+    // New arrival filter
     if (
       is_new_arrival !== undefined &&
       is_new_arrival !== null &&
       is_new_arrival !== ""
     ) {
       query.is_new_arrival =
-        is_new_arrival === "true" ||
-        is_new_arrival === true ||
-        is_new_arrival === "1";
+        is_new_arrival === "true" || is_new_arrival === "1";
     }
 
     // Sorting logic
     let sort: any = {};
     if (sort_by === "latest" || sort_by === "createdAt") {
       sort.createdAt = sort_direction === "asc" ? 1 : -1;
-    } else if (sort_by === "rating") {
-      sort.rating_count = sort_direction === "desc" ? -1 : 1;
     } else if (sort_by === "price") {
       sort.price = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "rating") {
+      sort.rating_count = sort_direction === "asc" ? 1 : -1;
     } else if (sort_by === "name") {
       sort.name = sort_direction === "asc" ? 1 : -1;
     } else {
-      sort.createdAt = -1;
+      sort.createdAt = -1; // Default sort
     }
 
     // Pagination calculation
@@ -510,6 +528,7 @@ export const getProductsWithFilter = asyncHandler(
 
     // Execute queries
     const products = await Product.find(query)
+      .select("-__v") // Exclude version field
       .sort(sort)
       .skip(skip)
       .limit(limitNum);
@@ -530,6 +549,7 @@ export const getProductsWithFilter = asyncHandler(
       if (category) params.append("category", category as string);
       if (minPrice) params.append("minPrice", minPrice as string);
       if (maxPrice) params.append("maxPrice", maxPrice as string);
+
       if (color) {
         if (Array.isArray(color)) {
           color.forEach((c) => params.append("color", c as string));
@@ -537,6 +557,7 @@ export const getProductsWithFilter = asyncHandler(
           params.append("color", color as string);
         }
       }
+
       if (size) {
         if (Array.isArray(size)) {
           size.forEach((s) => params.append("size", s as string));
@@ -544,6 +565,23 @@ export const getProductsWithFilter = asyncHandler(
           params.append("size", size as string);
         }
       }
+
+      if (
+        is_feature !== undefined &&
+        is_feature !== null &&
+        is_feature !== ""
+      ) {
+        params.append("is_feature", is_feature as string);
+      }
+
+      if (
+        is_new_arrival !== undefined &&
+        is_new_arrival !== null &&
+        is_new_arrival !== ""
+      ) {
+        params.append("is_new_arrival", is_new_arrival as string);
+      }
+
       if (sort_by) params.append("sort_by", sort_by as string);
       if (sort_direction)
         params.append("sort_direction", sort_direction as string);
@@ -564,7 +602,7 @@ export const getProductsWithFilter = asyncHandler(
         ? `${baseUrl}?${buildQueryParams(pageNum + 1)}`
         : null;
 
-    // Build meta links for pagination
+    // Build meta links for pagination (like in users - show ALL pages)
     const metaLinks = [];
 
     // Previous link
@@ -574,7 +612,7 @@ export const getProductsWithFilter = asyncHandler(
       active: false,
     });
 
-    // Page number links
+    // Page number links (show ALL pages like in users)
     for (let i = 1; i <= totalPages; i++) {
       metaLinks.push({
         url: `${baseUrl}?${buildQueryParams(i)}`,
@@ -595,7 +633,7 @@ export const getProductsWithFilter = asyncHandler(
     const to =
       totalProducts > 0 ? Math.min(pageNum * limitNum, totalProducts) : null;
 
-    // Send response
+    // Send response (EXACT SAME FORMAT AS USERS)
     res.json({
       data: products,
       links: {
@@ -621,7 +659,6 @@ export const getProductsWithFilter = asyncHandler(
     });
   },
 );
-
 // @route GET | api/products/meta
 // @desc Get all unique colors and size and minPrice and maxPrice
 // @access Public

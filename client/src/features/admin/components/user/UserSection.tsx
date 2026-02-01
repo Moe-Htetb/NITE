@@ -124,7 +124,6 @@ const UserSection = () => {
     sort_direction: sortDirection,
   });
 
-  //   console.log(usersData);
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
