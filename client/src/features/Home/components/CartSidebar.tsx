@@ -118,7 +118,7 @@ const CartSidebar = () => {
     }
 
     dispatch(closeCart());
-    navigate("/checkout");
+    navigate("/orders");
   };
 
   const handleClearCart = () => {

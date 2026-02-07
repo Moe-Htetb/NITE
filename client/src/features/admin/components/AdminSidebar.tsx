@@ -14,15 +14,15 @@ import {
 import {
   LayoutDashboard,
   Package,
-  Folder,
+  // Folder,
   Users,
-  BarChart3,
+  // BarChart3,
   Settings,
   HomeIcon,
   LogOut,
   ShoppingBag,
-  FileText,
-  TrendingUp,
+  // FileText,
+  // TrendingUp,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
@@ -40,11 +40,11 @@ const menuItems = [
         url: "/dashboard/products",
         icon: Package,
       },
-      {
-        title: "Categories",
-        url: "/dashboard/categories",
-        icon: Folder,
-      },
+      // {
+      //   title: "Categories",
+      //   url: "/dashboard/categories",
+      //   icon: Folder,
+      // },
       {
         title: "Orders",
         url: "/dashboard/orders",
@@ -52,26 +52,26 @@ const menuItems = [
       },
     ],
   },
-  {
-    title: "Analytics",
-    items: [
-      {
-        title: "Reports",
-        url: "/dashboard/reports",
-        icon: FileText,
-      },
-      {
-        title: "Analytics",
-        url: "/dashboard/analytics",
-        icon: BarChart3,
-      },
-      {
-        title: "Trends",
-        url: "/dashboard/trends",
-        icon: TrendingUp,
-      },
-    ],
-  },
+  // {
+  //   title: "Analytics",
+  //   items: [
+  //     {
+  //       title: "Reports",
+  //       url: "/dashboard/reports",
+  //       icon: FileText,
+  //     },
+  //     {
+  //       title: "Analytics",
+  //       url: "/dashboard/analytics",
+  //       icon: BarChart3,
+  //     },
+  //     {
+  //       title: "Trends",
+  //       url: "/dashboard/trends",
+  //       icon: TrendingUp,
+  //     },
+  //   ],
+  // },
   {
     title: "Settings",
     items: [
