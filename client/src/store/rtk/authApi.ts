@@ -43,7 +43,40 @@ export interface LoginResponse {
     email: string;
     role: "admin" | "user";
   };
+  token?: string;
+}
+export interface LogoutResponse {
+  success: boolean;
+  message: string;
+}
+export interface ForgotPasswordRequest {
+  email: string;
+}
+export interface ForgotPasswordResponse {
+  success: string;
+  message: string;
+  token?: string;
+}
+
+export interface verifyForgotPasswordOtpRequest {
+  email: string;
+  otp: string;
   token: string;
+}
+export interface verifyForgotPasswordOtpResponse {
+  message: string;
+  token?: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token?: string;
+  new_password: string;
+  confirm_password: string;
+}
+export interface ResetPasswordResponse {
+  message: string;
+  email?: string;
 }
 
 export const authApiSlice = apiSlice.injectEndpoints({
@@ -93,6 +126,52 @@ export const authApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["auth"],
     }),
+    logout: builder.mutation<LogoutResponse, void>({
+      query: () => ({
+        url: "/logout",
+        method: "POST",
+      }),
+      invalidatesTags: ["auth"],
+    }),
+    forgotPassword: builder.mutation<
+      ForgotPasswordResponse,
+      ForgotPasswordRequest
+    >({
+      query: (data) => ({
+        url: "/forgot-password",
+        method: "POST",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+    verifyForgotPasswordOtp: builder.mutation<
+      verifyForgotPasswordOtpResponse,
+      verifyForgotPasswordOtpRequest
+    >({
+      query: (data) => ({
+        url: "/verify-otp",
+        method: "POST",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+    resetPassword: builder.mutation<
+      ResetPasswordResponse,
+      ResetPasswordRequest
+    >({
+      query: (data) => ({
+        url: "/reset-password",
+        method: "POST",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
   }),
 });
 
@@ -101,4 +180,8 @@ export const {
   useRegisterMutation,
   useVerifyRegisterOtpMutation,
   useLoginMutation,
+  useLogoutMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerifyForgotPasswordOtpMutation,
 } = authApiSlice;

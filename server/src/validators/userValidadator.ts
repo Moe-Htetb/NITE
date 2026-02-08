@@ -104,6 +104,15 @@ export const updateEmailValidation = [
     .isEmail()
     .withMessage("Enter a valid Email"),
 ];
+export const UpdateEmailOtpValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Valid email is required"),
+  body("otp").notEmpty().withMessage("Otp is required"),
+  body("token").notEmpty().withMessage("token is required"),
+];
 
 export const updateNameValidation = [
   body("name").notEmpty().withMessage("Name is required"),
@@ -172,8 +181,6 @@ export const resetPasswordValidator = [
     .isLength({ min: 6 })
     .withMessage("new_password must be at least 6 characters long")
     .custom((value) => {
-      //   console.log("Password validation:", value); // Debug log
-
       if (!/(?=.*[A-Z])/.test(value)) {
         throw new Error("Password must contain at least one uppercase letter");
       }

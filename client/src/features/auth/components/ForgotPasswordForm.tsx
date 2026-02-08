@@ -1,31 +1,69 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router";
+import { useForgotPasswordMutation } from "@/store/rtk/authApi";
+import { toast } from "sonner";
+import { emailSchema } from "@/schema/auth";
+import type { ForgotPasswordFormValues } from "@/types/formInputs";
+import { setCookie } from "react-use-cookie";
+import { ArrowLeft, KeyRoundIcon, Mail, Loader2 } from "lucide-react";
 
-// ForgotPasswordForm.tsx
 const ForgotPasswordForm = () => {
   const navigate = useNavigate();
-  const onSubmitHandler = () => {
-    navigate("/verify-otp");
+
+  // Initialize react-hook-form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(emailSchema),
+  });
+
+  // RTK Query mutation
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
+
+  // Form submission handler
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    try {
+      console.log(data);
+
+      const response = await forgotPassword({ email: data.email }).unwrap();
+      console.log(response);
+
+      toast.success(
+        response.message || "Reset instructions sent to your email"
+      );
+
+      // Store email in cookie for OTP verification
+      const info = {
+        email: data.email,
+        token: response.token,
+      };
+      setCookie("resetInfo", JSON.stringify(info));
+
+      // Navigate to OTP verification page
+      navigate("/verify-otp");
+    } catch (error: any) {
+      navigate("/");
+      console.error("Error sending reset instructions:", error);
+      toast.error(
+        error.data?.message ||
+          "Failed to send reset instructions. Please try again."
+      );
+    }
   };
+
+  const submitting = isLoading || isSubmitting;
+
   return (
     <form
-      className="space-y-6 max-w-[400px] mx-auto mt-10"
-      onSubmit={onSubmitHandler}
+      className="space-y-6 max-w-100 mx-auto mt-10"
+      onSubmit={handleSubmit(onSubmit)}
     >
       <div className="text-center mb-2">
-        <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-emerald-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-            />
-          </svg>
+        <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <KeyRoundIcon className="w-8 h-8 text-gray-800" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900">
           Reset your password
@@ -45,53 +83,44 @@ const ForgotPasswordForm = () => {
         <div className="relative">
           <input
             id="email"
-            name="email"
             type="email"
-            autoComplete="email"
-            required
-            className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-300 placeholder-gray-400"
+            {...register("email")}
+            className={`block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition duration-300 placeholder-gray-400 ${
+              errors.email ? "border-red-500" : "border-gray-300"
+            }`}
             placeholder="Enter your email address"
           />
-          <svg
-            className="w-5 h-5 text-gray-400 absolute right-3 top-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-            />
-          </svg>
+          <Mail className="w-5 h-5 text-gray-400 absolute right-3 top-3.5" />
         </div>
+        {errors.email && (
+          <p className="text-red-500 text-sm mt-2">{errors.email.message}</p>
+        )}
       </div>
 
       <button
         type="submit"
-        className="w-full bg-emerald-600 text-white py-3.5 px-4 rounded-xl font-semibold hover:bg-emerald-700 transition duration-300 transform hover:scale-[1.02] active:scale-100 shadow-sm hover:shadow-md"
+        disabled={submitting}
+        className={`w-full bg-black text-white py-3.5 px-4 rounded-xl font-semibold transition duration-300 transform hover:scale-[1.02] active:scale-100 shadow-sm hover:shadow-md ${
+          submitting ? "bg-gray-400 cursor-not-allowed" : "hover:bg-gray-800"
+        }`}
       >
-        Send reset instructions
+        {submitting ? (
+          <span className="flex items-center justify-center">
+            <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+            Sending...
+          </span>
+        ) : (
+          "Send reset instructions"
+        )}
       </button>
 
       <div className="text-center pt-4 border-t border-gray-100">
-        <Link to={"/sign-in"}>
-          {" "}
-          <button className="inline-flex items-center text-sm text-gray-600 hover:text-emerald-600 font-medium transition duration-300 group">
-            <svg
-              className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
+        <Link to="/login">
+          <button
+            type="button"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-black font-medium transition duration-300 group"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
             Back to sign in
           </button>
         </Link>

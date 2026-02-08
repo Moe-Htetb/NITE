@@ -43,7 +43,7 @@ export const registerController = asyncHandler(
       data = await Otp.create(otpData);
     } else {
       const lastOtpRequest = new Date(
-        existEmail.updatedAt as unknown as string | number | Date
+        existEmail.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString();
       const currentDate = new Date().toLocaleDateString();
       const isSameDate = lastOtpRequest === currentDate;
@@ -89,7 +89,7 @@ export const registerController = asyncHandler(
       res.status(400);
       throw new Error("Failed to send OTP email. Please try again.");
     }
-  }
+  },
 );
 // @route POST | api/verify-register-otp
 // desc Verify OTP for registration
@@ -122,7 +122,7 @@ export const verifyRegisterOtpController = asyncHandler(
     // Check if OTP is from same date
     const isSameDate =
       new Date(
-        otpRow.updatedAt as unknown as string | number | Date
+        otpRow.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString() === new Date().toLocaleDateString();
 
     // Check error count limit
@@ -142,7 +142,7 @@ export const verifyRegisterOtpController = asyncHandler(
         {
           errorCount: 5,
         },
-        { new: true }
+        { new: true },
       );
       res.status(400).json({
         error: "Invalid token",
@@ -155,7 +155,7 @@ export const verifyRegisterOtpController = asyncHandler(
     const isOtpExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 5;
     if (isOtpExpired) {
       res.status(403).json({
@@ -175,7 +175,7 @@ export const verifyRegisterOtpController = asyncHandler(
         {
           errorCount: newErrorCount,
         },
-        { new: true }
+        { new: true },
       );
 
       res.status(400).json({
@@ -196,7 +196,7 @@ export const verifyRegisterOtpController = asyncHandler(
       success: true,
       message: "Account created successfully",
     });
-  }
+  },
 );
 
 //@route POST | /api/v1/login
@@ -208,6 +208,7 @@ export const loginController = asyncHandler(
       const { email, password } = req.body;
 
       const user = await User.findOne({ email });
+      // console.log(user);
 
       if (!user) {
         res.status(401);
@@ -222,6 +223,14 @@ export const loginController = asyncHandler(
       }
 
       const LoginToken = generateToken(res, user._id);
+      let profileUrl = "";
+      if (
+        user.profile &&
+        Array.isArray(user.profile) &&
+        user.profile.length > 0
+      ) {
+        profileUrl = user.profile[0]?.url || "";
+      }
       res.status(200).json({
         success: true,
         message: "Login successful",
@@ -229,6 +238,7 @@ export const loginController = asyncHandler(
           id: user._id,
           name: user.name,
           email: user.email,
+          profile: profileUrl,
           role: user.role,
         },
         token: LoginToken,
@@ -236,7 +246,7 @@ export const loginController = asyncHandler(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 //@route POST | /api/v1/logout
@@ -247,10 +257,10 @@ export const logoutController = asyncHandler(
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     });
-    res.status(200).json({ message: "Logout successful" });
-  }
+    res.status(200).json({ success: true, message: "Logout successful" });
+  },
 );
 
 //@route POST | /api/v1/profileUpload
@@ -276,8 +286,29 @@ export const profileUploadController = asyncHandler(
       }
 
       // Delete old profile image if exists
-      if (userInfo?.profile?.url && userInfo?.profile?.public_alt) {
-        await deleteImage(userInfo.profile.public_alt);
+      if (userInfo.profile) {
+        // Check if profile is an object with public_alt property
+        if (userInfo.profile.public_alt) {
+          console.log(
+            "Deleting old image with public_alt:",
+            userInfo.profile.public_alt,
+          );
+          await deleteImage(userInfo.profile.public_alt);
+        }
+        // Or if profile is an array (check your User model structure)
+        else if (
+          Array.isArray(userInfo.profile) &&
+          userInfo.profile.length > 0
+        ) {
+          const firstProfile = userInfo.profile[0];
+          if (firstProfile.public_alt) {
+            console.log(
+              "Deleting old image from array with public_alt:",
+              firstProfile.public_alt,
+            );
+            await deleteImage(firstProfile.public_alt);
+          }
+        }
       }
 
       // Convert buffer to base64 for Cloudinary
@@ -287,36 +318,54 @@ export const profileUploadController = asyncHandler(
       // Upload to Cloudinary
       const response = await uploadSingleImage(dataURI, "NITE/user/profile");
 
-      // Update user profile
+      // Update user profile - ensure consistent structure
       const updatedUser = await User.findByIdAndUpdate(
         userInfo._id,
         {
           profile: {
             url: response.url,
-            public_alt: response.public_alt,
+            public_alt: response.public_alt, // Make sure this matches what Cloudinary returns
           },
         },
-        { new: true }
+        { new: true },
       ).select("-password");
+
+      // Get profile URL for response
+      let profileUrl = "";
+      let profilePublicAlt = "";
+
+      if (updatedUser!.profile) {
+        if (updatedUser!.profile.url) {
+          profileUrl = updatedUser!.profile.url;
+          profilePublicAlt = updatedUser!.profile.public_alt;
+        }
+        // Check if it's an array (old structure)
+        else if (
+          Array.isArray(updatedUser!.profile) &&
+          updatedUser!.profile.length > 0
+        ) {
+          profileUrl = updatedUser!.profile[0]?.url || "";
+          profilePublicAlt = updatedUser!.profile[0]?.public_alt || "";
+        }
+      }
 
       res.status(200).json({
         success: true,
         message: "Profile image uploaded successfully",
-        data: {
-          profile: updatedUser?.profile,
-          user: {
-            id: updatedUser?._id,
-            name: updatedUser?.name,
-            email: updatedUser?.email,
-          },
+        user: {
+          id: updatedUser!._id,
+          name: updatedUser!.name,
+          email: updatedUser!.email,
+          profile: profileUrl,
+          role: updatedUser!.role,
         },
       });
     } catch (error: any) {
+      console.error("Profile upload error:", error);
       next(error);
     }
-  }
+  },
 );
-
 //@route POST | /api/v1/profile
 // @desc login user getting profile
 // @access Private
@@ -326,26 +375,325 @@ export const getUserProfileController = asyncHandler(
     const user = req.user;
     const userInfo = await User.findById(user?._id).select("-password");
     res.status(200).json({ user: userInfo });
-  }
+  },
 );
 
 //@route POST | /api/v1/updateEmail
-// @desc login user update email
+// @desc Send OTP to new email for verification
 // @access Private
 export const updateEmailController = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { user } = req;
-    const { email } = req.body;
+    const { email: newEmail } = req.body;
 
-    const existUserEmail = await User.findOne({ email });
-    if (existUserEmail) {
-      throw new Error("This email is already owned by other");
+    // Check if user is authenticated
+    if (!user) {
+      res.status(401);
+      throw new Error("Not authenticated");
     }
-    await User.findByIdAndUpdate(user?._id, { email });
-    res.status(200).json({ message: "Email Updated Successfully" });
-  }
+
+    // Get current user info
+    const currentUser = await User.findById(user._id);
+    if (!currentUser) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    // Check if new email is same as current email
+    if (currentUser.email === newEmail) {
+      res.status(400);
+      throw new Error("New email cannot be same as current email");
+    }
+
+    // Check if new email already exists
+    const existingUserWithNewEmail = await User.findOne({ email: newEmail });
+    if (existingUserWithNewEmail) {
+      res.status(400);
+      throw new Error("This email is already registered");
+    }
+
+    // Generate OTP and token
+    const token = generateOneTimeToken();
+    const otp = generateOTP();
+    const hashOtp = await bcrypt.hash(otp, 10);
+
+    // Check existing OTP record for the new email
+    const existEmail = await Otp.findOne({ email: newEmail });
+
+    let otpData;
+    if (!existEmail) {
+      // Create new OTP record
+      otpData = {
+        email: newEmail,
+        otp: hashOtp,
+        token,
+        count: 1,
+        errorCount: 0,
+        userId: user._id, // Store current user ID for verification
+        purpose: "email-update", // Add purpose field for clarity
+      };
+      await Otp.create(otpData);
+    } else {
+      // Check if OTP was requested on the same day
+      const lastOtpRequest = new Date(
+        existEmail.updatedAt as unknown as string | number | Date,
+      ).toLocaleDateString();
+      const currentDate = new Date().toLocaleDateString();
+      const isSameDate = lastOtpRequest === currentDate;
+
+      checkOtpLimit(isSameDate, existEmail?.errorCount, existEmail?.count);
+
+      // Update existing OTP record
+      const updateData = {
+        otp: hashOtp,
+        token,
+        count: isSameDate ? existEmail.count + 1 : 1,
+        errorCount: 0, // Reset error count
+        userId: user._id, // Update with current user ID
+        purpose: "email-update",
+      };
+      await Otp.findByIdAndUpdate(existEmail._id, updateData, {
+        new: true,
+      });
+    }
+
+    // Prepare verification URL (for email template)
+    const verificationUrl = `${process.env.CLIENT_URL}/verify-email-update`;
+    const emailBody = otpEmailTemplate(otp, verificationUrl);
+
+    try {
+      console.log(`📧 Sending email update OTP to: ${newEmail}`);
+
+      // Send OTP to new email
+      await sendEmail({
+        reciver_mail: newEmail,
+        subject: "Verify Your New Email - NITE.COM",
+        body: emailBody,
+      });
+
+      // For development, show OTP in console
+      if (process.env.NODE_ENV === "development") {
+        console.log(`🔄 DEV MODE: Email update OTP for ${newEmail}: ${otp}`);
+      }
+
+      // Also send notification to old email
+      const notificationBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Email Change Request</h2>
+          <p>Hello ${currentUser.name},</p>
+          <p>We've received a request to change your email address from <strong>${currentUser.email}</strong> to <strong>${newEmail}</strong>.</p>
+          <p>An OTP has been sent to the new email address for verification.</p>
+          <p>If you didn't request this change, please contact our support team immediately.</p>
+          <br/>
+          <p>Best regards,<br/>NITE Team</p>
+        </div>
+      `;
+
+      await sendEmail({
+        reciver_mail: currentUser.email,
+        subject: "Email Change Request Notification - NITE.COM",
+        body: notificationBody,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `OTP sent successfully to ${newEmail}`,
+        token,
+        email: newEmail,
+        // Include OTP in development mode for testing
+        ...(process.env.NODE_ENV === "development" && {
+          devOtp: otp,
+          devNote: "OTP shown only in development mode",
+        }),
+      });
+    } catch (error: any) {
+      console.error("❌ Email update OTP sending failed:", error.message);
+
+      // Clean up OTP record if email failed
+      if (otpData) {
+        await Otp.findByIdAndDelete(otpData.userId);
+      } else if (existEmail) {
+        await Otp.findByIdAndUpdate(existEmail._id, {
+          $inc: { count: -1 },
+        });
+      }
+
+      // For development, still return OTP even if email fails
+      if (process.env.NODE_ENV === "development") {
+        res.status(200).json({
+          success: false,
+          message: `Email sending failed, but here's your OTP for testing: ${otp}`,
+          token,
+          otp: otp,
+          email: newEmail,
+          error: error.message,
+          note: "Email service failed, but you can use this OTP for testing",
+        });
+      } else {
+        throw new Error("Failed to send verification email. Please try again.");
+      }
+    }
+  },
 );
 
+//@route POST | /api/v1/verify-update-email
+// @desc Verify OTP for email update
+// @access Private
+export const updateEmailVerifyController = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { user } = req;
+    const { email: newEmail, otp, token } = req.body;
+
+    // Check if user is authenticated
+    if (!user) {
+      res.status(401);
+      throw new Error("Not authenticated");
+    }
+
+    // Check if OTP record exists for the new email
+    const otpRow = await Otp.findOne({
+      email: newEmail,
+      purpose: "email-update",
+    });
+
+    if (!otpRow) {
+      res.status(400).json({
+        error: "OTP not found",
+        message: "Please request a new OTP",
+      });
+      return;
+    }
+
+    // Verify the user ID matches
+    if (otpRow.userId!.toString() !== user._id.toString()) {
+      res.status(403).json({
+        error: "Unauthorized",
+        message: "This OTP is not for your account",
+      });
+      return;
+    }
+
+    // Check if OTP is from same date
+    const isSameDate =
+      new Date(
+        otpRow.updatedAt as unknown as string | number | Date,
+      ).toLocaleDateString() === new Date().toLocaleDateString();
+
+    // Check error count limit
+    if (otpRow.errorCount >= 5) {
+      res.status(403).json({
+        error: "Too many failed attempts",
+        message: "Please try again tomorrow",
+      });
+      return;
+    }
+
+    // Token verification
+    const isSameToken = otpRow.token === token;
+    if (!isSameToken) {
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: 5,
+        },
+        { new: true },
+      );
+      res.status(400).json({
+        error: "Invalid token",
+        message: "Token verification failed",
+      });
+      return;
+    }
+
+    // OTP expiration check (5 minutes)
+    const isOtpExpired =
+      moment().diff(
+        moment(otpRow.updatedAt as unknown as string | number | Date),
+        "minutes",
+      ) > 5;
+    if (isOtpExpired) {
+      res.status(403).json({
+        error: "OTP expired",
+        message: "OTP expired. Please request a new OTP",
+      });
+      return;
+    }
+
+    // OTP verification
+    const isMatchOtp = await bcrypt.compare(otp, otpRow.otp);
+    if (!isMatchOtp) {
+      const newErrorCount = isSameDate ? otpRow.errorCount + 1 : 1;
+      await Otp.findByIdAndUpdate(
+        otpRow._id,
+        {
+          errorCount: newErrorCount,
+        },
+        { new: true },
+      );
+
+      res.status(400).json({
+        error: "Invalid OTP",
+        message: "Please check your OTP and try again",
+      });
+      return;
+    }
+
+    // Get current user
+    const currentUser = await User.findById(user._id);
+    if (!currentUser) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    const oldEmail = currentUser.email;
+
+    // Update user email
+    currentUser.email = newEmail;
+    await currentUser.save();
+
+    // Delete OTP record after successful verification
+    await Otp.findByIdAndDelete(otpRow._id);
+
+    // Generate new login token (optional, since email is part of auth info)
+    // const newLoginToken = generateToken(res, currentUser._id);
+
+    // Send success notification to new email
+    const successBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Email Update Successful</h2>
+        <p>Hello ${currentUser.name},</p>
+        <p>Your email address has been successfully updated.</p>
+        <p><strong>Old Email:</strong> ${oldEmail}</p>
+        <p><strong>New Email:</strong> ${newEmail}</p>
+        <p>All future communications will be sent to this new email address.</p>
+        <br/>
+        <p>If you didn't make this change, please contact our support team immediately.</p>
+        <br/>
+        <p>Best regards,<br/>NITE Team</p>
+      </div>
+    `;
+
+    await sendEmail({
+      reciver_mail: newEmail,
+      subject: "Email Update Successful - NITE.COM",
+      body: successBody,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Email updated successfully",
+      email: newEmail,
+      // user: {
+      //   id: currentUser._id,
+      //   name: currentUser.name,
+      //   email: newEmail,
+      //   profile: currentUser.profile?.url || "",
+      //   role: currentUser.role,
+      // },
+      // token: newLoginToken,
+    });
+  },
+);
 //@route POST | /api/v1/updateName
 // @desc login user update name
 // @access Private
@@ -354,9 +702,12 @@ export const updateNameController = asyncHandler(
     const { user } = req;
     const { name } = req.body;
 
-    await User.findByIdAndUpdate(user?._id, { name });
-    res.status(200).json({ message: "Name Updated Successfully" });
-  }
+    const updatedUser = await User.findByIdAndUpdate(user?._id, { name });
+    res.status(200).json({
+      message: "Name Updated Successfully",
+      name: updatedUser?.name,
+    });
+  },
 );
 
 //@route POST | /api/v1/updateName
@@ -373,14 +724,14 @@ export const updatePasswordController = asyncHandler(
 
     const isPasswordValid = await bcrypt.compare(
       old_password,
-      existUser.password
+      existUser.password,
     );
     if (!isPasswordValid) throw new Error("Password Invalid");
     existUser.password = new_password;
     await existUser.save();
 
     res.status(200).json({ message: "Password updated successfully." });
-  }
+  },
 );
 
 // @route POST | api/forgot-password
@@ -419,7 +770,7 @@ export const forgotPasswordController = asyncHandler(
     } else {
       // Check if OTP was requested on the same day
       const lastOtpRequest = new Date(
-        existEmail.updatedAt as unknown as string | number | Date
+        existEmail.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString();
       const currentDate = new Date().toLocaleDateString();
       const isSameDate = lastOtpRequest === currentDate;
@@ -460,7 +811,6 @@ export const forgotPasswordController = asyncHandler(
         success: true,
         message: `Password reset OTP sent successfully to ${email}`,
         token,
-        // Include OTP in development mode for testing convenience
         ...(process.env.NODE_ENV === "development" && {
           devOtp: otp,
           devNote:
@@ -492,11 +842,11 @@ export const forgotPasswordController = asyncHandler(
         });
       } else {
         throw new Error(
-          "Failed to send password reset email. Please try again."
+          "Failed to send password reset email. Please try again.",
         );
       }
     }
-  }
+  },
 );
 
 // @route POST | api/verify-otp
@@ -529,7 +879,7 @@ export const verifyOtpController = asyncHandler(
     // Check if OTP is from same date
     const isSameDate =
       new Date(
-        otpRow.updatedAt as unknown as string | number | Date
+        otpRow.updatedAt as unknown as string | number | Date,
       ).toLocaleDateString() === new Date().toLocaleDateString();
 
     // Check error count limit
@@ -550,7 +900,7 @@ export const verifyOtpController = asyncHandler(
         {
           errorCount: 5,
         },
-        { new: true }
+        { new: true },
       );
       res.status(400).json({
         error: "Invalid token",
@@ -563,7 +913,7 @@ export const verifyOtpController = asyncHandler(
     const isOtpExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 1;
     if (isOtpExpired) {
       res.status(403).json({
@@ -583,7 +933,7 @@ export const verifyOtpController = asyncHandler(
         {
           errorCount: newErrorCount,
         },
-        { new: true }
+        { new: true },
       );
 
       res.status(400).json({
@@ -602,7 +952,7 @@ export const verifyOtpController = asyncHandler(
     res
       .status(200)
       .json({ message: "OTP verified successfully", token: newToken });
-  }
+  },
 );
 // @route POST | api/reset-password
 // desc verify Otp
@@ -659,7 +1009,7 @@ export const resetPasswordController = asyncHandler(
     const isExpired =
       moment().diff(
         moment(otpRow.updatedAt as unknown as string | number | Date),
-        "minutes"
+        "minutes",
       ) > 10;
     if (isExpired) {
       res.status(403).json({
@@ -681,5 +1031,153 @@ export const resetPasswordController = asyncHandler(
       message: "Password reset successfully",
       email: email,
     });
-  }
+  },
+);
+
+//@route GET | /api/v1/users
+// @desc Get users with filtering, sorting, and pagination
+// @access Private (Admin)
+export const getUsersWithFilter = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const {
+      keyword,
+      role,
+      sort_by = "createdAt",
+      sort_direction = "desc",
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    let query: any = {};
+
+    // Search by keyword (name or email)
+    //trim and check if not empty
+
+    if (keyword) {
+      query.$or = [
+        { name: { $regex: keyword.toString().trim(), $options: "i" } },
+        { email: { $regex: keyword.toString().trim(), $options: "i" } },
+      ];
+    }
+
+    // Filter by role
+    if (role) {
+      query.role = role;
+    }
+
+    // Sorting logic
+    let sort: any = {};
+    if (sort_by === "latest" || sort_by === "createdAt") {
+      sort.createdAt = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "name") {
+      sort.name = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "email") {
+      sort.email = sort_direction === "asc" ? 1 : -1;
+    } else if (sort_by === "role") {
+      sort.role = sort_direction === "asc" ? 1 : -1;
+    } else {
+      sort.createdAt = -1; // Default sort
+    }
+
+    // Pagination calculation
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Execute queries (excluding password field for security)
+    const users = await User.find(query)
+      .select("-password -confirmPassword")
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limitNum);
+
+    // Build base URL
+    const baseUrl = `${req.protocol}://${req.get("host")}${req.baseUrl}${
+      req.path
+    }`;
+
+    // Build query parameters without page
+    const buildQueryParams = (pageNumber: number = pageNum) => {
+      const params = new URLSearchParams();
+
+      if (keyword) params.append("keyword", keyword as string);
+      if (role) params.append("role", role as string);
+      if (sort_by) params.append("sort_by", sort_by as string);
+      if (sort_direction)
+        params.append("sort_direction", sort_direction as string);
+
+      params.append("limit", limitNum.toString());
+      params.append("page", pageNumber.toString());
+
+      return params.toString();
+    };
+
+    // Build links
+    const firstPageUrl = `${baseUrl}?${buildQueryParams(1)}`;
+    const lastPageUrl = `${baseUrl}?${buildQueryParams(totalPages)}`;
+    const prevPageUrl =
+      pageNum > 1 ? `${baseUrl}?${buildQueryParams(pageNum - 1)}` : null;
+    const nextPageUrl =
+      pageNum < totalPages
+        ? `${baseUrl}?${buildQueryParams(pageNum + 1)}`
+        : null;
+
+    // Build meta links for pagination
+    const metaLinks = [];
+
+    // Previous link
+    metaLinks.push({
+      url: prevPageUrl,
+      label: "&laquo; Previous",
+      active: false,
+    });
+
+    // Page number links (show ALL pages like in products)
+    for (let i = 1; i <= totalPages; i++) {
+      metaLinks.push({
+        url: `${baseUrl}?${buildQueryParams(i)}`,
+        label: i.toString(),
+        active: i === pageNum,
+      });
+    }
+
+    // Next link
+    metaLinks.push({
+      url: nextPageUrl,
+      label: "Next &raquo;",
+      active: false,
+    });
+
+    // Calculate from and to
+    const from = totalUsers > 0 ? (pageNum - 1) * limitNum + 1 : null;
+    const to = totalUsers > 0 ? Math.min(pageNum * limitNum, totalUsers) : null;
+
+    // Send response (EXACT SAME FORMAT AS PRODUCTS)
+    res.json({
+      data: users,
+      links: {
+        first: firstPageUrl,
+        last: lastPageUrl,
+        prev: prevPageUrl,
+        next: nextPageUrl,
+        totalUsers, // Changed from totalProducts
+        totalPages,
+        from,
+        to,
+      },
+      meta: {
+        current_page: pageNum,
+        from: from,
+        last_page: totalPages,
+        links: metaLinks,
+        path: baseUrl,
+        per_page: limitNum,
+        to: to,
+        total: totalUsers, // Changed from totalProducts
+      },
+    });
+  },
 );

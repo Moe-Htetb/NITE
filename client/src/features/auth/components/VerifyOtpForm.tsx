@@ -1,23 +1,22 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router";
-import { getCookie, removeCookie } from "react-use-cookie";
+import { getCookie, removeCookie, setCookie } from "react-use-cookie";
 import { useEffect, useRef, useState } from "react";
-
 import { toast } from "sonner";
 import type { otpFormInputs } from "@/types/formInputs";
 import { otpSchema } from "@/schema/auth";
 import {
-  useVerifyRegisterOtpMutation,
-  type VerifyRegisterOtpResponse,
+  useForgotPasswordMutation,
+  type verifyForgotPasswordOtpResponse,
 } from "@/store/rtk/authApi";
-
-// import { useAppDispatch } from "@/types/product";
-// import { setAuthInfo } from "@/store/authSlice";
+import { ArrowLeft, Shield, Timer, Loader2 } from "lucide-react";
 
 const VerifyOtpForm = () => {
-  const userInfoCookie = getCookie("userInfo");
-  const userInfo = userInfoCookie ? JSON.parse(userInfoCookie) : null;
+  const resetInfoCookie = getCookie("resetInfo");
+  const resetInfo = resetInfoCookie ? JSON.parse(resetInfoCookie) : null;
+  console.log(resetInfo);
+
   const {
     register,
     handleSubmit,
@@ -35,6 +34,8 @@ const VerifyOtpForm = () => {
   const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
+  const [timer, setTimer] = useState(120); // 2 minutes in seconds
+  const [isTimerActive, setIsTimerActive] = useState(true);
 
   const otpValue = watch("otp");
 
@@ -45,6 +46,29 @@ const VerifyOtpForm = () => {
       setOtpDigits(["", "", "", "", "", ""]);
     }
   }, [otpValue]);
+
+  // Timer effect
+  useEffect(() => {
+    let interval: number;
+
+    if (isTimerActive && timer > 0) {
+      interval = window.setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setIsTimerActive(false);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTimerActive, timer]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -64,7 +88,7 @@ const VerifyOtpForm = () => {
 
   const handleKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -97,27 +121,48 @@ const VerifyOtpForm = () => {
   };
 
   const { ref: otpInputRef, ...otpRest } = register("otp");
-  const [verifyRegisterMutation, { isLoading }] =
-    useVerifyRegisterOtpMutation();
+  const [verifyForgotPassword, { isLoading }] = useForgotPasswordMutation();
 
   const onSubmitHandler = async (otp: otpFormInputs) => {
     try {
-      const data = { ...otp, ...userInfo };
+      console.log("resetInfo from cookie:", resetInfo);
 
-      const response: VerifyRegisterOtpResponse = await verifyRegisterMutation(
-        data
-      ).unwrap();
-
-      console.log(response);
-
-      if (response.success) {
-        toast.success("OTP verified successfully!");
-        removeCookie("userInfo");
-        navigate("/login");
+      if (!resetInfo || !resetInfo.email) {
+        toast.error("Reset information not found. Please try again.");
+        return;
       }
 
-      setOtpDigits(["", "", "", "", "", ""]);
-      setValue("otp", "");
+      const data = { ...otp, ...resetInfo };
+      console.log("Data sent to API:", data);
+
+      const response: verifyForgotPasswordOtpResponse =
+        await verifyForgotPassword(data).unwrap();
+
+      console.log("API Response:", response);
+
+      if (!response.token) {
+        toast.error("Invalid response from server. Please try again.");
+        return;
+      }
+
+      // Prepare new user info
+      const userInfo = {
+        email: resetInfo.email,
+        token: response.token,
+      };
+
+      console.log("User Info to store in cookie:", userInfo);
+
+      // Try setting cookie with different options
+      setCookie("userInfo", JSON.stringify(userInfo));
+      removeCookie("resetInfo");
+
+      toast.success("OTP verified successfully!");
+
+      // Small delay before navigation to ensure cookie is set
+      setTimeout(() => {
+        navigate("/reset-password");
+      }, 100);
     } catch (error: any) {
       console.error("OTP verification error:", error);
       toast.error(error.data?.message || "Invalid OTP. Please try again.");
@@ -128,40 +173,30 @@ const VerifyOtpForm = () => {
     }
   };
 
-  const handleResendOtp = async () => {
-    try {
-      // Example resend OTP API call
-      // await resendOtp({ email: userInfo?.email, token }).unwrap();
+  // const handleResendOtp = async () => {
+  //   // TODO: Implement resend OTP logic
+  //   console.log("Resend OTP requested for:", resetInfo?.email || userInfo?.email);
+  //   toast.info("Resend OTP feature will be implemented soon");
+  //   // Reset timer to 2 minutes
+  //   setTimer(120);
+  //   setIsTimerActive(true);
+  // };
 
-      toast.success("New OTP sent to your email!");
-    } catch (error: any) {
-      toast.error(error.data?.message || "Failed to resend OTP");
-    }
-  };
+  // Determine which email to display
+  const displayEmail = resetInfo?.email || "your email";
 
   return (
-    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md border border-gray-200">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-emerald-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-            />
-          </svg>
+        <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Shield className="w-8 h-8 text-gray-800" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900">
           Enter verification code
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          We sent a 6-digit code to {userInfo?.email || "your email"}
+          We sent a 6-digit code to{" "}
+          <span className="font-medium">{displayEmail}</span>
         </p>
       </div>
 
@@ -196,9 +231,9 @@ const VerifyOtpForm = () => {
                 className={`w-12 h-12 text-center text-xl font-semibold border rounded-lg focus:outline-none focus:ring-2 transition duration-200 bg-white ${
                   errors.otp
                     ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
+                    : "border-gray-300 focus:ring-black focus:border-black"
                 }`}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoading}
               />
             ))}
           </div>
@@ -209,23 +244,40 @@ const VerifyOtpForm = () => {
           )}
 
           {/* Character counter */}
-          <div className="mt-2 text-right">
+          <div className="mt-2 flex justify-between items-center">
             <span
               className={`text-xs ${
-                otpValue.length === 6 ? "text-emerald-600" : "text-gray-500"
+                otpValue.length === 6 ? "text-black" : "text-gray-500"
               }`}
             >
               {otpValue.length}/6 digits
             </span>
+            {isTimerActive && (
+              <div className="flex items-center text-xs text-gray-600">
+                <Timer className="w-3 h-3 mr-1" />
+                Expires in: {formatTime(timer)}
+              </div>
+            )}
           </div>
         </div>
 
         <button
           type="submit"
-          disabled={isSubmitting || isLoading}
-          className="w-full bg-emerald-600 text-white py-3.5 px-4 rounded-xl font-semibold hover:bg-emerald-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600 shadow-sm hover:shadow-md"
+          disabled={isSubmitting || isLoading || otpValue.length !== 6}
+          className={`w-full py-3.5 px-4 rounded-xl font-semibold transition duration-300 shadow-sm hover:shadow-md ${
+            isSubmitting || isLoading || otpValue.length !== 6
+              ? "bg-gray-400 cursor-not-allowed text-white"
+              : "bg-black hover:bg-gray-800 text-white"
+          }`}
         >
-          {isLoading ? "Verifying..." : "Verify code"}
+          {isLoading ? (
+            <span className="flex items-center justify-center">
+              <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+              Verifying...
+            </span>
+          ) : (
+            "Verify code"
+          )}
         </button>
 
         <div className="text-center space-y-4">
@@ -233,32 +285,24 @@ const VerifyOtpForm = () => {
             Didn't receive the code?
             <button
               type="button"
-              onClick={handleResendOtp}
-              disabled={isSubmitting}
-              className="ml-1 text-emerald-600 hover:text-emerald-500 font-medium transition duration-300 disabled:opacity-50"
+              // onClick={handleResendOtp}
+              disabled={isTimerActive}
+              className={`ml-1 font-medium transition duration-300 ${
+                isTimerActive
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-black hover:text-gray-700"
+              }`}
             >
-              Resend code
+              Resend code {isTimerActive && `(${formatTime(timer)})`}
             </button>
           </p>
 
           <div className="pt-4 border-t border-gray-100">
             <Link
-              to="/sign-in"
-              className="inline-flex items-center text-sm text-gray-600 hover:text-emerald-600 font-medium transition duration-300 group"
+              to="/login"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-black font-medium transition duration-300 group"
             >
-              <svg
-                className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
               Back to sign in
             </Link>
           </div>

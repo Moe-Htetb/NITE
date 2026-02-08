@@ -15,11 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useLoginMutation } from "@/store/rtk/authApi";
 import { toast } from "sonner";
-import { setCookie } from "react-use-cookie";
+// import { setCookie } from "react-use-cookie";
+import { useAppDispatch, useAppSelector } from "@/types/useRedux";
+import { selectAuthInfo, setAuthInfo } from "@/store/authSlice";
 
 const SignInForm = () => {
   const {
@@ -40,18 +42,21 @@ const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const rememberMeValue = watch("rememberMe");
 
   const onSubmit = async (data: signInFormInputs) => {
     try {
       const response = await login(data).unwrap();
+      console.log(response);
 
       if (response.success) {
         toast.success("Login successful!");
 
-        // Set cookie with remember me option
-        setCookie("authInfo", JSON.stringify(response.user));
+        dispatch(setAuthInfo(response.user));
+
+        // setCookie("authInfo", JSON.stringify(response.user));
 
         // Navigate based on user role
         if (response.user.role === "admin") {
@@ -62,7 +67,7 @@ const SignInForm = () => {
       }
     } catch (error: any) {
       toast.error(
-        error.data?.message || "Login failed. Please check your credentials."
+        error.data?.message || "Login failed. Please check your credentials.",
       );
     }
   };
@@ -71,6 +76,12 @@ const SignInForm = () => {
     setShowPassword(!showPassword);
   };
 
+  const authInfo = useAppSelector(selectAuthInfo);
+  useEffect(() => {
+    if (authInfo) {
+      navigate("/");
+    }
+  }, [navigate, authInfo]);
   return (
     <Card className="w-full max-w-md border shadow-lg">
       <CardHeader className="space-y-1">

@@ -15,8 +15,10 @@ import { toast } from "sonner";
 import { Button } from "@base-ui/react";
 import { useNavigate } from "react-router";
 import { setCookie } from "react-use-cookie";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useAppSelector } from "@/types/useRedux";
+import { selectAuthInfo } from "@/store/authSlice";
 
 const SignUpForm = () => {
   const {
@@ -52,7 +54,7 @@ const SignUpForm = () => {
       };
       setCookie("userInfo", JSON.stringify(userData));
 
-      navigate("/verify-otp");
+      navigate("/verify-register-otp");
       toast.success("OTP sent to your email!");
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -63,6 +65,12 @@ const SignUpForm = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  const authInfo = useAppSelector(selectAuthInfo);
+  useEffect(() => {
+    if (authInfo) {
+      navigate("/");
+    }
+  }, [navigate, authInfo]);
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);

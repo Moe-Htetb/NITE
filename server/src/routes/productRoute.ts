@@ -14,7 +14,7 @@ import { isAdmin, protect } from "../middlewares/authMiddleware";
 import {
   createProductValidator,
   deleteProductValidator,
-  updateProductValidator,
+  validateUpdateProduct,
 } from "../validators/productValidator";
 import { validateRequest } from "../middlewares/validateRequest";
 import { upload } from "../utils/upload";
@@ -28,8 +28,8 @@ productRouter.post(
   isAdmin,
   // createProductValidator,
   // validateRequest,
-  upload.array("images"),
-  createProductController
+  upload.array("images", 10),
+  createProductController,
 );
 
 // Get all products (with filters)
@@ -44,15 +44,15 @@ productRouter.get("/product/meta", getMetaProductController); // This now comes 
 productRouter.get("/product/:id", getSingleProductController);
 
 // Update and delete
-productRouter.put(
+productRouter.patch(
   "/product/update/:id",
   protect,
   isAdmin,
-  // updateProductValidator,
-  // validateRequest,
+  validateUpdateProduct,
+  validateRequest,
   upload.array("images"),
 
-  updateProductController
+  updateProductController,
 );
 productRouter.delete(
   "/product/delete/:id",
@@ -60,7 +60,7 @@ productRouter.delete(
   isAdmin,
   deleteProductValidator,
   validateRequest,
-  deleteProductController
+  deleteProductController,
 );
 
 export default productRouter;
